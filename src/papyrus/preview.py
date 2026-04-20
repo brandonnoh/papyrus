@@ -181,7 +181,11 @@ _PREVIEW_JS = """<script>
       else contentEls.push(el);
     });
 
-    var a4H = bodyEl.offsetWidth * (297 / 210);
+    var _ruler = document.createElement('div');
+    _ruler.style.cssText = 'height:297mm;position:absolute;visibility:hidden;pointer-events:none';
+    document.body.appendChild(_ruler);
+    var a4H = _ruler.getBoundingClientRect().height;
+    document.body.removeChild(_ruler);
     var allPages = [];
 
     function newPage(isFirst) {
