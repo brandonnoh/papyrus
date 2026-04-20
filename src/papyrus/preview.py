@@ -18,7 +18,22 @@ _PREVIEW_MARKER_END = "<!-- papyrus-preview-end -->"
 
 _PREVIEW_CSS = """<style>
 @media screen {
-  /* placeholder — task-004에서 page-break-indicator, task-005에서 toolbar 추가 */
+  .page-break-indicator {
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    background: #e8e8e8;
+    border-top: 2px dashed #bbb;
+    border-bottom: 2px dashed #bbb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 10px/1 'Noto Sans KR', sans-serif;
+    color: #999;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    user-select: none;
+  }
 }
 @media print {
   .preview-toolbar, .page-break-indicator { display: none !important; }
@@ -48,6 +63,33 @@ _PREVIEW_JS = """<script>
       window.__papyrusSave();
     }
   });
+})();
+(function() {
+  function refreshPageBreaks() {
+    var bodyEl = document.querySelector('.page--body');
+    if (!bodyEl) return;
+    bodyEl.querySelectorAll('.page-break-indicator').forEach(function(el) { el.remove(); });
+    var a4H = bodyEl.offsetWidth * (297 / 210);
+    var sections = Array.from(bodyEl.querySelectorAll('.doc-section'));
+    var pageNum = 1;
+    sections.forEach(function(sec) {
+      var secTop = sec.offsetTop;
+      while (secTop > pageNum * a4H) {
+        var ind = document.createElement('div');
+        ind.className = 'page-break-indicator';
+        ind.textContent = pageNum + '페이지 / ' + (pageNum + 1) + '페이지';
+        sec.parentNode.insertBefore(ind, sec);
+        pageNum++;
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageBreaks);
+  if (typeof ResizeObserver !== 'undefined') {
+    var ro = new ResizeObserver(refreshPageBreaks);
+    var bodyEl = document.querySelector('.page--body');
+    if (bodyEl) ro.observe(bodyEl);
+  }
+  window.__papyrusRefreshPages = refreshPageBreaks;
 })();
 </script>"""
 
