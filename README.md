@@ -8,7 +8,9 @@ Claude에게 "보고서 만들어줘"라고 하면 템플릿 선택부터 브라
 
 ## 설치
 
-프로젝트의 `.claude/settings.json` 또는 전역 `~/.claude/settings.json`에 추가합니다.
+### 프로젝트에 추가 (권장)
+
+사용하려는 프로젝트 루트에 `.mcp.json` 파일을 생성합니다.
 
 ```json
 {
@@ -21,7 +23,24 @@ Claude에게 "보고서 만들어줘"라고 하면 템플릿 선택부터 브라
 }
 ```
 
-Claude Code를 재시작하면 `papyrus` MCP가 활성화됩니다.
+Claude Code가 프로젝트를 열면 `.mcp.json`을 자동으로 감지합니다.
+
+### 전역 설치 (모든 프로젝트에서 사용)
+
+`~/.claude/settings.json`의 `mcpServers` 블록에 추가합니다.
+
+```json
+{
+  "mcpServers": {
+    "papyrus": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/brandonnoh/papyrus.git", "papyrus"]
+    }
+  }
+}
+```
+
+설정 후 Claude Code를 재시작하면 적용됩니다.
 
 ---
 
@@ -46,7 +65,7 @@ Claude: 보고서를 저장할 기본 경로를 알려주세요. (기본값: ~/p
 
 ### 환경변수 직접 설정
 
-대화형 설정 대신 `settings.json`에 `env` 블록으로 직접 지정할 수도 있습니다.
+대화형 설정 대신 `.mcp.json`에 `env` 블록으로 직접 지정할 수도 있습니다.
 
 ```json
 {
