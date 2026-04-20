@@ -85,16 +85,8 @@ def prepare_css(
 # ---------------------------------------------------------------------------
 
 def build_pages(report_data: ReportData) -> list[dict]:
-    """Cover page + one content page per H2 section."""
-    pages: list[dict] = [{"index": -1, "heading": "", "content": "", "is_cover": True}]
-    for i, section in enumerate(report_data.sections):
-        pages.append({
-            "index": i,
-            "heading": section.heading,
-            "content": section.html_content,
-            "is_cover": False,
-        })
-    return pages
+    """Cover page entry only; body sections rendered via sections variable."""
+    return [{"is_cover": True}]
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +120,7 @@ def render_report(
     )
     tmpl = env.get_template(tmpl_path)
     html = _render_template(tmpl, report_data, pages, css)
-    _check_violations(html, pages, meta)
+    _check_violations(html, report_data.sections, meta)
     return html
 
 
@@ -169,15 +161,16 @@ def _render_template(
         date=report_data.date,
         classification=report_data.classification or "대외비",
         pages=pages,
+        sections=report_data.sections,
         **css,
     )
 
 
 def _check_violations(
-    html: str, pages: list[dict], meta: TemplateMeta,
+    html: str, sections: list, meta: TemplateMeta,
 ) -> None:
     """Run style validation and raise on errors."""
-    content_html = "\n".join(p["content"] for p in pages)
+    content_html = "\n".join(s.html_content for s in sections)
     violations = validate_style(content_html, meta, full_html=html)
     errors = [v for v in violations if v.severity == "error"]
     if errors:

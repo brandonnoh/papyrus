@@ -31,13 +31,21 @@ body {
 
 .page {
   width: var(--page-width);
-  height: var(--page-height);
   margin: 12px auto;
   padding: var(--page-margin) var(--page-margin);
   background: var(--color-bg-page);
   box-shadow: var(--shadow-page);
-  overflow: hidden;
   position: relative;
+}
+
+.page--cover {
+  height: var(--page-height);
+  overflow: hidden;
+}
+
+.page--body {
+  height: auto;
+  min-height: var(--page-height);
 }
 
 /* 워터마크 (로고) */
@@ -61,16 +69,36 @@ body {
   .page {
     margin: 0;
     box-shadow: none;
-    page-break-after: always;
+    width: 100%;
+    padding: 0;
   }
-  .page:last-child {
-    page-break-after: auto;
+  .page--cover {
+    break-after: page;
   }
   .no-print {
     display: none;
   }
-  .page-content {
-    max-height: none;
+  .doc-section {
+    break-inside: avoid-page;
+  }
+  .doc-section h2 {
+    break-before: page;
+  }
+  .doc-section:first-child h2 {
+    break-before: avoid;
+  }
+  h2, h3 {
+    break-after: avoid;
+  }
+  table, .key-message, figure, pre {
+    break-inside: avoid;
+  }
+  @page {
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #999;
+    }
   }
 }
 
@@ -380,12 +408,7 @@ hr {
    9. 페이지 구성요소
    ---------------------------------------------------------- */
 
-.page-content {
-  max-height: calc(var(--page-height) - var(--page-margin) * 2 - var(--page-header-reserved));
-  overflow: hidden;
-}
-
-.page-header {
+.doc-header {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-heading);
@@ -395,15 +418,10 @@ hr {
   margin-bottom: 3mm;
 }
 
-.page-number {
-  position: absolute;
-  bottom: var(--page-num-bottom);
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-family: var(--font-heading);
-  font-size: var(--size-page-num);
-  color: var(--color-text-page-meta);
+.doc-section + .doc-section {
+  margin-top: 10mm;
+  padding-top: 8mm;
+  border-top: 1px dashed var(--color-border-light);
 }
 
 .print-btn {
