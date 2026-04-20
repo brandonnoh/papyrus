@@ -35,28 +35,105 @@ _PREVIEW_CSS = """<style>
     user-select: none;
   }
 }
+  [contenteditable]:hover { outline: 1px dashed #b0c4de; border-radius: 2px; }
+  [contenteditable]:focus { outline: 2px solid #09356E; border-radius: 2px; }
+  .preview-toolbar {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(9,53,110,0.92); color: #fff; padding: 6px 16px;
+    border-radius: 20px; font: 12px/1.5 'Noto Sans KR',sans-serif;
+    display: flex; gap: 12px; align-items: center;
+    z-index: 1000; backdrop-filter: blur(4px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  }
+  .preview-toolbar .dirty-indicator {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ff6b6b; display: none;
+  }
+  .preview-toolbar.is-dirty .dirty-indicator { display: block; }
+  .preview-toolbar button {
+    background: none; border: none; color: #fff;
+    cursor: pointer; font: inherit; padding: 0;
+  }
+  .preview-toolbar button:hover { opacity: 0.75; }
+  .save-toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #09356E; color: #fff;
+    padding: 8px 16px; border-radius: 8px;
+    font: 12px 'Noto Sans KR',sans-serif;
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 2000;
+  }
+  .save-toast.show { opacity: 1; }
+}
 @media print {
-  .preview-toolbar, .page-break-indicator { display: none !important; }
+  .preview-toolbar, .save-toast, .page-break-indicator { display: none !important; }
 }
 </style>"""
 
 _PREVIEW_JS = """<script>
 (function() {
-  const SAVE_URL = '{{SAVE_URL}}';
+  var SAVE_URL = '{{SAVE_URL}}';
+  var _dirty = false;
+
+  // 툴바 삽입
+  var toolbar = document.createElement('div');
+  toolbar.className = 'preview-toolbar';
+  toolbar.innerHTML = '<span class="dirty-indicator"></span><span>편집 모드</span>'
+    + '<button onclick="window.__papyrusSave()">저장 (⌘S)</button>'
+    + '<button onclick="window.print()">인쇄</button>';
+
+  // 토스트 삽입
+  var toast = document.createElement('div');
+  toast.className = 'save-toast';
+  toast.textContent = '저장됨 ✓';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.body.appendChild(toolbar);
+    document.body.appendChild(toast);
+
+    // contenteditable 활성화
+    document.querySelectorAll('.doc-section').forEach(function(sec) {
+      sec.setAttribute('contenteditable', 'true');
+    });
+
+    // dirty 감지
+    var bodyEl = document.querySelector('.page--body');
+    if (bodyEl) {
+      bodyEl.addEventListener('input', function() {
+        _dirty = true;
+        toolbar.classList.add('is-dirty');
+        if (window.__papyrusRefreshPages) window.__papyrusRefreshPages();
+      });
+    }
+  });
+
+  // 저장
   window.__papyrusSave = function() {
-    const html = document.documentElement.outerHTML;
-    const clean = html.replace(
-      /<!--\\s*papyrus-preview-start\\s*-->[\\s\\S]*?<!--\\s*papyrus-preview-end\\s*-->/g,
-      ''
+    document.querySelectorAll('[contenteditable]').forEach(function(el) {
+      el.removeAttribute('contenteditable');
+    });
+    var html = document.documentElement.outerHTML;
+    document.querySelectorAll('.doc-section').forEach(function(sec) {
+      sec.setAttribute('contenteditable', 'true');
+    });
+    var clean = html.replace(
+      /<!--\\s*papyrus-preview-start\\s*-->[\\s\\S]*?<!--\\s*papyrus-preview-end\\s*-->/g, ''
     );
     fetch(SAVE_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({html: clean})
-    }).then(function(r){ return r.json(); }).then(function(d){
-      if (d.ok) console.log('papyrus: saved');
+    }).then(function(r){ return r.json(); }).then(function(d) {
+      if (d.ok) {
+        _dirty = false;
+        toolbar.classList.remove('is-dirty');
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 2000);
+      }
     });
   };
+
+  // Cmd+S / Ctrl+S
   document.addEventListener('keydown', function(e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {
       e.preventDefault();
