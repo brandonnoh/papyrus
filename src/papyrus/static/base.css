@@ -114,7 +114,7 @@ body {
   width: 100%;
   text-align: center;
   padding: 3mm 0;
-  margin-bottom: 35mm;
+  margin-bottom: 5mm;
   border-top: var(--border-cover-top) solid var(--color-primary);
   border-bottom: var(--border-cover-bottom) solid var(--color-primary);
 }

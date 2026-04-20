@@ -10,4 +10,9 @@
     <tr><td>등 급</td><td>{{ classification }}</td></tr>
   </table>
 </div>
+{% if logo_uri %}
+<div class="cover-logo">
+  <img src="{{ logo_uri }}" alt="logo">
+</div>
+{% endif %}
 {% endblock cover %}
