@@ -68,6 +68,22 @@ _PREVIEW_CSS = """<style>
 @media print {
   .preview-toolbar, .save-toast, .page-break-indicator { display: none !important; }
 }
+@media screen {
+  .doc-section { position: relative; }
+  .drag-handle {
+    position: absolute; left: -20px; top: 8px;
+    width: 16px; height: 16px; cursor: grab;
+    color: #ccc; font-size: 14px; line-height: 1;
+    opacity: 0; transition: opacity 0.15s;
+    user-select: none;
+  }
+  .doc-section:hover .drag-handle { opacity: 1; }
+  .doc-section.dragging { opacity: 0.4; border: 1px dashed #09356E; }
+  .doc-section.drop-target { border-top: 3px solid #09356E; }
+}
+@media print {
+  .drag-handle { display: none !important; }
+}
 </style>"""
 
 _PREVIEW_JS = """<script>
@@ -167,6 +183,51 @@ _PREVIEW_JS = """<script>
     if (bodyEl) ro.observe(bodyEl);
   }
   window.__papyrusRefreshPages = refreshPageBreaks;
+})();
+(function() {
+  var _draggingEl = null;
+
+  function initDnD() {
+    document.querySelectorAll('.doc-section').forEach(function(sec) {
+      if (sec.querySelector('.drag-handle')) return;
+      var handle = document.createElement('span');
+      handle.className = 'drag-handle';
+      handle.textContent = '\u2807';
+      handle.title = '드래그하여 순서 변경';
+      sec.insertBefore(handle, sec.firstChild);
+      sec.setAttribute('draggable', 'true');
+
+      sec.addEventListener('dragstart', function(e) {
+        _draggingEl = sec;
+        sec.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      sec.addEventListener('dragend', function() {
+        sec.classList.remove('dragging');
+        document.querySelectorAll('.drop-target').forEach(function(el) {
+          el.classList.remove('drop-target');
+        });
+        if (window.__papyrusSave) window.__papyrusSave();
+        if (window.__papyrusRefreshPages) window.__papyrusRefreshPages();
+      });
+      sec.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        if (_draggingEl && _draggingEl !== sec) sec.classList.add('drop-target');
+      });
+      sec.addEventListener('dragleave', function() {
+        sec.classList.remove('drop-target');
+      });
+      sec.addEventListener('drop', function(e) {
+        e.preventDefault();
+        sec.classList.remove('drop-target');
+        if (!_draggingEl || _draggingEl === sec) return;
+        sec.parentNode.insertBefore(_draggingEl, sec);
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initDnD);
+  window.__papyrusInitDnD = initDnD;
 })();
 </script>"""
 
