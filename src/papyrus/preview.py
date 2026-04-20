@@ -201,14 +201,41 @@ _PREVIEW_JS = """<script>
       return page;
     }
 
+    function fits(page) { return page.scrollHeight <= a4H; }
+
+    function splitSection(section, page) {
+      section.parentNode && section.parentNode.removeChild(section);
+      var kids = Array.from(section.children);
+      var wrap = document.createElement('div');
+      wrap.className = section.className;
+      page.appendChild(wrap);
+      var firstKid = true;
+      kids.forEach(function(kid) {
+        wrap.appendChild(kid);
+        if (!fits(page) && !firstKid) {
+          wrap.removeChild(kid);
+          page = newPage(false);
+          wrap = document.createElement('div');
+          wrap.className = section.className;
+          page.appendChild(wrap);
+          wrap.appendChild(kid);
+          firstKid = true;
+        } else { firstKid = false; }
+      });
+      return page;
+    }
+
     var currentPage = newPage(true);
+    var firstOnPage = true;
     contentEls.forEach(function(el) {
       currentPage.appendChild(el);
-      var sectionCount = currentPage.querySelectorAll('.doc-section').length;
-      if (currentPage.scrollHeight > a4H && sectionCount > 1) {
-        currentPage.removeChild(el);
-        currentPage = newPage(false);
-        currentPage.appendChild(el);
+      if (fits(currentPage) || firstOnPage) { firstOnPage = false; return; }
+      el.parentNode.removeChild(el);
+      currentPage = newPage(false);
+      firstOnPage = false;
+      currentPage.appendChild(el);
+      if (!fits(currentPage) && el.classList.contains('doc-section')) {
+        currentPage = splitSection(el, currentPage);
       }
     });
 
