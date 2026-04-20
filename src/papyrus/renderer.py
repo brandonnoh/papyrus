@@ -77,6 +77,7 @@ def prepare_css(
     logo_uri = inline_logo(static_dir, brand.logo_path)
     css["css_base"] = _patch_watermark(css["css_base"], logo_uri)
     css["css_template"] = _read_text(template_meta.path / "style.css")
+    css["logo_uri"] = logo_uri
     return css
 
 
@@ -145,6 +146,7 @@ def _prepare_css_custom(static_dir: Path) -> dict[str, str]:
     logo_uri = inline_logo(static_dir, brand.logo_path)
     css["css_base"] = _patch_watermark(css["css_base"], logo_uri)
     css["css_template"] = ""
+    css["logo_uri"] = logo_uri
     return css
 
 

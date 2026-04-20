@@ -18,6 +18,11 @@
     <h1>{{ title }}</h1>
     <div class="meta">{{ authors }} &nbsp;|&nbsp; {{ date }}</div>
   </div>
+  {% if logo_uri %}
+  <div class="cover-logo">
+    <img src="{{ logo_uri }}" alt="logo">
+  </div>
+  {% endif %}
   {% endblock cover %}
 </div>
 <div class="page page--body">

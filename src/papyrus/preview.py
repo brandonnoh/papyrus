@@ -60,21 +60,23 @@ _PREVIEW_CSS = """<style>
     pointer-events: none; z-index: 2000;
   }
   .save-toast.show { opacity: 1; }
-  .doc-section { position: relative; }
-  .drag-handle {
-    position: absolute; left: -20px; top: 8px;
-    width: 16px; height: 16px; cursor: grab;
-    color: #ccc; font-size: 14px; line-height: 1;
-    opacity: 0; transition: opacity 0.15s;
-    user-select: none;
+  .preview-page-num {
+    position: absolute;
+    bottom: 5mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: var(--size-page-num);
+    color: var(--color-text-page-meta);
   }
-  .doc-section:hover .drag-handle { opacity: 1; }
-  .doc-section.dragging { opacity: 0.4; border: 1px dashed #09356E; }
-  .doc-section.drop-target { border-top: 3px solid #09356E; }
 }
 @media print {
-  .preview-toolbar, .save-toast, .drag-handle { display: none !important; }
-  .preview-page { all: unset; }
+  .preview-toolbar, .save-toast, .preview-page-num, [data-papyrus-clone] { display: none !important; }
+  @page { margin: var(--page-margin); }
+  .page { padding: 0 !important; }
+  .preview-page { display: contents; }
+  .page--body { min-height: 0 !important; }
+  .page--cover { height: 100vh !important; }
 }
 </style>"""
 
@@ -113,7 +115,9 @@ _PREVIEW_JS = """<script>
     var pages = bodyEl ? Array.from(bodyEl.querySelectorAll('.preview-page')) : [];
     var savedEls = [];
     pages.forEach(function(pg) {
-      Array.from(pg.children).forEach(function(el) { savedEls.push(el); });
+      Array.from(pg.children).forEach(function(el) {
+        if (!el.dataset.papyrusClone && !el.dataset.papyrusPageNum) savedEls.push(el);
+      });
     });
     pages.forEach(function(pg) { pg.remove(); });
     savedEls.forEach(function(el) { bodyEl && bodyEl.appendChild(el); });
@@ -160,31 +164,59 @@ _PREVIEW_JS = """<script>
     var pages = bodyEl.querySelectorAll('.preview-page');
     if (pages.length > 0) {
       pages.forEach(function(pg) {
-        Array.from(pg.children).forEach(function(el) { elements.push(el); });
+        Array.from(pg.children).forEach(function(el) {
+          if (!el.dataset.papyrusClone && !el.dataset.papyrusPageNum) elements.push(el);
+        });
+        pg.remove();
       });
-      pages.forEach(function(pg) { pg.remove(); });
     } else {
       elements = Array.from(bodyEl.children);
       elements.forEach(function(el) { el.remove(); });
     }
 
-    var a4H = bodyEl.offsetWidth * (297 / 210);
+    var headerEl = null;
+    var contentEls = [];
+    elements.forEach(function(el) {
+      if (el.classList.contains('doc-header')) headerEl = el;
+      else contentEls.push(el);
+    });
 
-    function newPage() {
+    var a4H = bodyEl.offsetWidth * (297 / 210);
+    var allPages = [];
+
+    function newPage(isFirst) {
       var page = document.createElement('div');
       page.className = 'preview-page';
       bodyEl.appendChild(page);
+      if (headerEl) {
+        var h = isFirst ? headerEl : headerEl.cloneNode(true);
+        if (!isFirst) h.dataset.papyrusClone = 'true';
+        page.appendChild(h);
+      }
+      var numEl = document.createElement('div');
+      numEl.className = 'preview-page-num';
+      numEl.dataset.papyrusPageNum = 'true';
+      page.appendChild(numEl);
+      allPages.push({page: page, numEl: numEl});
       return page;
     }
 
-    var currentPage = newPage();
-    elements.forEach(function(el) {
+    var currentPage = newPage(true);
+    contentEls.forEach(function(el) {
       currentPage.appendChild(el);
-      if (currentPage.scrollHeight > a4H && currentPage.children.length > 1) {
+      var sectionCount = currentPage.querySelectorAll('.doc-section').length;
+      if (currentPage.scrollHeight > a4H && sectionCount > 1) {
         currentPage.removeChild(el);
-        currentPage = newPage();
+        currentPage = newPage(false);
         currentPage.appendChild(el);
       }
+    });
+
+    var hasCover = !!document.querySelector('.page--cover');
+    var offset = hasCover ? 1 : 0;
+    var total = allPages.length + offset;
+    allPages.forEach(function(p, i) {
+      p.numEl.textContent = (i + 1 + offset) + ' / ' + total;
     });
   }
 
@@ -196,51 +228,6 @@ _PREVIEW_JS = """<script>
     });
   }
   window.__papyrusBuildPages = buildPreviewPages;
-})();
-(function() {
-  var _draggingEl = null;
-
-  function initDnD() {
-    document.querySelectorAll('.doc-section').forEach(function(sec) {
-      if (sec.querySelector('.drag-handle')) return;
-      var handle = document.createElement('span');
-      handle.className = 'drag-handle';
-      handle.textContent = '\u2807';
-      handle.title = '드래그하여 순서 변경';
-      sec.insertBefore(handle, sec.firstChild);
-      sec.setAttribute('draggable', 'true');
-
-      sec.addEventListener('dragstart', function(e) {
-        _draggingEl = sec;
-        sec.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      });
-      sec.addEventListener('dragend', function() {
-        sec.classList.remove('dragging');
-        document.querySelectorAll('.drop-target').forEach(function(el) {
-          el.classList.remove('drop-target');
-        });
-        if (window.__papyrusBuildPages) window.__papyrusBuildPages();
-        if (window.__papyrusSave) window.__papyrusSave();
-      });
-      sec.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        if (_draggingEl && _draggingEl !== sec) sec.classList.add('drop-target');
-      });
-      sec.addEventListener('dragleave', function() {
-        sec.classList.remove('drop-target');
-      });
-      sec.addEventListener('drop', function(e) {
-        e.preventDefault();
-        sec.classList.remove('drop-target');
-        if (!_draggingEl || _draggingEl === sec) return;
-        sec.parentNode.insertBefore(_draggingEl, sec);
-      });
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', initDnD);
-  window.__papyrusInitDnD = initDnD;
 })();
 </script>"""
 
