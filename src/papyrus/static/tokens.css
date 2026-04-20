@@ -1,0 +1,110 @@
+/* ============================================================
+   Design Tokens — papyrus
+   Single source of truth for all visual constants.
+   템플릿 CSS는 이 파일의 변수만 참조해야 합니다.
+   ============================================================ */
+
+:root {
+  /* ===== 브랜드 ===== */
+  --color-primary: #09356E;
+  --color-primary-hover: #062845;
+
+  /* ===== 텍스트 ===== */
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666;
+  --color-text-muted: #767676;
+  --color-text-dark: #333;
+  --color-text-page-meta: #999;
+  --color-text-list-marker: #555;
+
+  /* ===== 배경 ===== */
+  --color-bg-screen: #d8d8d8;
+  --color-bg-page: #fff;
+  --color-bg-th: #e8eaed;
+  --color-bg-td-label: #f2f4f8;
+  --color-bg-emphasis: #f0f4f8;
+
+  /* ===== 보더 ===== */
+  --color-border: #aaa;
+  --color-border-light: #ddd;
+
+  /* ===== 그림자 ===== */
+  --shadow-page: 0 2px 10px rgba(0, 0, 0, 0.15);
+  --shadow-btn: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+  /* ===== 타이포그래피 — 패밀리 ===== */
+  --font-body: 'Noto Serif KR', 'Batang', serif;
+  --font-heading: 'Noto Sans KR', sans-serif;
+
+  /* ===== 타이포그래피 — 크기 ===== */
+  --size-h1: 22pt;
+  --size-h2: 16pt;
+  --size-h3: 16pt;
+  --size-h4: 13pt;
+  --size-body: 15pt;
+  --size-table: 10pt;
+  --size-caption: 8pt;
+  --size-meta: 10pt;
+  --size-page-num: 9pt;
+  --size-key-message: 13pt;
+  --size-page-header: 8pt;
+  --size-code: 9pt;
+  --size-footnote: 8pt;
+
+  /* ===== 타이포그래피 — 두께 ===== */
+  --weight-h1: 900;
+  --weight-h2: 800;
+  --weight-h3: 700;
+  --weight-h4: 700;
+  --weight-body: 400;
+  --weight-bold: 600;
+  --weight-key-message: 600;
+
+  /* ===== 타이포그래피 — 행간 ===== */
+  --line-height-body: 1.7;
+  --line-height-heading: 1.35;
+  --line-height-table: 1.55;
+  --line-height-list: 1.65;
+  --line-height-key-message: 1.65;
+
+  /* ===== 레이아웃 ===== */
+  --page-width: 210mm;
+  --page-height: 297mm;
+  --page-margin: 18mm;
+  --content-indent: 10pt;
+
+  /* ===== 간격 ===== */
+  --spacing-h2-top: 15pt;
+  --spacing-h2-bottom: 8pt;
+  --spacing-h3-top: 15pt;
+  --spacing-h3-bottom: 6pt;
+  --spacing-p-top: 10pt;
+  --spacing-table-top: 6pt;
+  --spacing-table-bottom: 3pt;
+
+  /* ===== 워터마크 ===== */
+  --watermark-opacity: 0.04;
+  --watermark-rotation: -30deg;
+  --watermark-width: 160mm;
+  --watermark-height: 50mm;
+
+  /* ===== 컴포넌트 — 보더 두께 ===== */
+  --border-h2-left: 5px;
+  --border-key-message-left: 4px;
+  --border-table: 1px;
+  --border-cover-top: 3.5px;
+  --border-cover-bottom: 1px;
+
+  /* ===== 코드 ===== */
+  --color-bg-code: #f5f5f5;
+  --color-bg-pre: #f8f8f8;
+  --color-border-code: #e0e0e0;
+
+  /* ===== 페이지 콘텐츠 ===== */
+  --page-header-reserved: 10mm;
+  --page-num-bottom: 10mm;
+
+  /* ===== 버튼 ===== */
+  --btn-radius: 5px;
+  --btn-padding: 8px 20px;
+}

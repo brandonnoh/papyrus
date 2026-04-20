@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>{{ title }}</title>
+<style>
+{{ css_tokens }}
+{{ css_base }}
+{% block extra_style %}{% endblock %}
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">PDF / 인쇄</button>
+{% block content %}
+{% for page in pages %}
+<div class="page{% if page.is_cover %} page--cover{% endif %}">
+  {% if page.is_cover %}
+  {% block cover %}
+  <div class="cover">
+    <h1>{{ title }}</h1>
+    <div class="meta">{{ authors }} &nbsp;|&nbsp; {{ date }}</div>
+  </div>
+  {% endblock cover %}
+  {% else %}
+  <div class="page-header">
+    <span>{{ classification }}</span><span>{{ classification }}</span>
+  </div>
+  <div class="page-content">
+  {% if page.heading %}<h2>{{ page.heading }}</h2>{% endif %}
+  {{ page.content }}
+  </div>
+  <div class="page-number">{{ loop.index0 }} / {{ pages|length - 1 }}</div>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock content %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var BLOCK = 'p, h3, h4, li, tr, .key-message, figure, pre, hr';
+  document.querySelectorAll('.page-content').forEach(function (container) {
+    var guard = 0;
+    while (container.scrollHeight > container.clientHeight && guard < 300) {
+      guard++;
+      var blocks = container.querySelectorAll(BLOCK);
+      if (blocks.length === 0) break;
+      var last = blocks[blocks.length - 1];
+      var parent = last.parentElement;
+      last.remove();
+      if (parent && parent !== container && parent.children.length === 0) {
+        parent.remove();
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>

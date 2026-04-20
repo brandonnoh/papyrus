@@ -1,0 +1,13 @@
+{% extends "_base/base.html" %}
+{% block extra_style %}{{ css_template }}{% endblock %}
+{% block cover %}
+<div class="cover meeting-cover">
+  <div class="meeting-label">회 의 록</div>
+  <h1>{{ title }}</h1>
+  <table class="cover-meta-table">
+    <tr><td>일 시</td><td>{{ date }}</td></tr>
+    <tr><td>작 성</td><td>{{ authors }}</td></tr>
+    <tr><td>등 급</td><td>{{ classification }}</td></tr>
+  </table>
+</div>
+{% endblock cover %}

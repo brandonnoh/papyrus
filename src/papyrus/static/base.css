@@ -1,0 +1,427 @@
+/* ============================================================
+   Base Stylesheet — papyrus
+   모든 색상·크기·간격은 tokens.css 변수만 사용합니다.
+   템플릿 특화 스타일(.cover, .case-table 등)은 여기 포함하지 않습니다.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. 리셋 + 페이지 레이아웃
+   ---------------------------------------------------------- */
+
+@page {
+  size: A4;
+  margin: var(--page-margin) var(--page-margin);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background: var(--color-bg-screen);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.page {
+  width: var(--page-width);
+  height: var(--page-height);
+  margin: 12px auto;
+  padding: var(--page-margin) var(--page-margin);
+  background: var(--color-bg-page);
+  box-shadow: var(--shadow-page);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 워터마크 (로고) */
+.page::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--watermark-width);
+  height: var(--watermark-height);
+  transform: translate(-50%, -50%) rotate(var(--watermark-rotation));
+  background: url('logo.png') no-repeat center / contain;
+  opacity: var(--watermark-opacity);
+  pointer-events: none;
+}
+
+@media print {
+  body {
+    background: var(--color-bg-page);
+  }
+  .page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+  .page:last-child {
+    page-break-after: auto;
+  }
+  .no-print {
+    display: none;
+  }
+  .page-content {
+    max-height: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   2. 표지 (cover)
+   ---------------------------------------------------------- */
+
+.page--cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover {
+  width: 100%;
+  text-align: center;
+  padding: 3mm 0;
+  margin-bottom: 5mm;
+  border-top: var(--border-cover-top) solid var(--color-primary);
+  border-bottom: var(--border-cover-bottom) solid var(--color-primary);
+}
+
+.cover h1 {
+  font-family: var(--font-heading);
+  font-size: var(--size-h1);
+  font-weight: var(--weight-h1);
+  color: var(--color-primary);
+  margin: 2mm 0 1.5mm;
+  line-height: var(--line-height-heading);
+}
+
+.cover .meta {
+  font-family: var(--font-heading);
+  font-size: var(--size-meta);
+  color: var(--color-text-secondary);
+}
+
+/* ----------------------------------------------------------
+   3. 타이포그래피
+   ---------------------------------------------------------- */
+
+h1 {
+  font-family: var(--font-heading);
+  font-size: var(--size-h1);
+  font-weight: var(--weight-h1);
+  color: var(--color-primary);
+  line-height: var(--line-height-heading);
+  margin: 2mm 0 1.5mm;
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-size: var(--size-h2);
+  font-weight: var(--weight-h2);
+  color: var(--color-text);
+  margin: var(--spacing-h2-top) 0 var(--spacing-h2-bottom);
+  padding: 2pt 0 2pt 12pt;
+  border-left: var(--border-h2-left) solid var(--color-primary);
+  line-height: var(--line-height-heading);
+}
+
+h2:first-child {
+  margin-top: 0;
+}
+
+h3 {
+  font-family: var(--font-heading);
+  font-size: var(--size-h3);
+  font-weight: var(--weight-h3);
+  color: var(--color-text);
+  margin: var(--spacing-h3-top) 0 var(--spacing-h3-bottom) 2pt;
+}
+
+h3::before {
+  content: '\25A1\0020';  /* □  */
+}
+
+h4 {
+  font-family: var(--font-heading);
+  font-size: var(--size-h4);
+  font-weight: var(--weight-h4);
+  color: var(--color-text);
+  margin: 12pt 0 4pt 2pt;
+}
+
+p {
+  font-size: var(--size-body);
+  margin: var(--spacing-p-top) 0 0 var(--content-indent);
+  text-align: justify;
+  word-break: keep-all;
+  line-height: var(--line-height-body);
+}
+
+/* ----------------------------------------------------------
+   3. 표
+   ---------------------------------------------------------- */
+
+table {
+  width: calc(100% - var(--content-indent));
+  border-collapse: collapse;
+  margin: var(--spacing-table-top) 0 var(--spacing-table-bottom) var(--content-indent);
+  font-family: var(--font-heading);
+  font-size: var(--size-table);
+  line-height: var(--line-height-table);
+}
+
+th,
+td {
+  border: var(--border-table) solid var(--color-border);
+  padding: 4pt 6pt;
+  text-align: left;
+  vertical-align: top;
+  word-break: keep-all;
+}
+
+th {
+  background: var(--color-bg-th);
+  color: var(--color-text-dark);
+  font-weight: var(--weight-h3);
+  text-align: center;
+}
+
+td:first-child {
+  font-weight: var(--weight-bold);
+  background: var(--color-bg-td-label);
+  text-align: center;
+  white-space: nowrap;
+}
+
+caption,
+.table-caption {
+  font-family: var(--font-heading);
+  font-size: var(--size-caption);
+  color: var(--color-text-secondary);
+  text-align: left;
+  margin-bottom: 4pt;
+  caption-side: top;
+}
+
+/* ----------------------------------------------------------
+   4. 강조 박스
+   ---------------------------------------------------------- */
+
+.key-message {
+  font-size: var(--size-key-message);
+  font-weight: var(--weight-key-message);
+  color: var(--color-primary);
+  background: var(--color-bg-emphasis);
+  border-left: var(--border-key-message-left) solid var(--color-primary);
+  padding: 5pt 10pt;
+  margin: 8pt 0 3pt var(--content-indent);
+  line-height: var(--line-height-key-message);
+}
+
+.key-message::before {
+  content: '\203B\0020';  /* ※  */
+  font-weight: var(--weight-h1);
+}
+
+.key-message p {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* ----------------------------------------------------------
+   5. 리스트
+   ---------------------------------------------------------- */
+
+ul {
+  margin: 6pt 0 3pt 18pt;
+  padding: 0;
+  font-size: var(--size-body);
+  list-style: none;
+}
+
+li {
+  margin-bottom: 3pt;
+  line-height: var(--line-height-list);
+}
+
+li::before {
+  content: '\2014\0020';  /* —  */
+  color: var(--color-text-list-marker);
+}
+
+ol {
+  margin: 6pt 0 3pt 18pt;
+  padding: 0;
+  font-size: var(--size-body);
+  list-style: decimal;
+}
+
+ol li::before {
+  content: none;
+}
+
+/* ----------------------------------------------------------
+   6. 이미지
+   ---------------------------------------------------------- */
+
+figure {
+  margin: 8pt 0 6pt var(--content-indent);
+  text-align: center;
+}
+
+figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+figcaption {
+  font-family: var(--font-heading);
+  font-size: var(--size-caption);
+  color: var(--color-text-secondary);
+  margin-top: 4pt;
+  text-align: center;
+}
+
+.img-left {
+  float: left;
+  margin: 4pt 12pt 8pt 0;
+  max-width: 45%;
+}
+
+.img-right {
+  float: right;
+  margin: 4pt 0 8pt 12pt;
+  max-width: 45%;
+}
+
+.img-inline {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ----------------------------------------------------------
+   7. 코드
+   ---------------------------------------------------------- */
+
+code {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: var(--size-code);
+  background: var(--color-bg-code);
+  border: var(--border-table) solid var(--color-border-code);
+  padding: 1pt 4pt;
+  border-radius: 3px;
+}
+
+pre {
+  background: var(--color-bg-pre);
+  border: var(--border-table) solid var(--color-border-code);
+  padding: 8pt 10pt;
+  margin: 8pt 0 6pt var(--content-indent);
+  overflow-x: auto;
+  line-height: var(--line-height-table);
+  border-radius: 3px;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* ----------------------------------------------------------
+   8. 섹션 레이블
+   ---------------------------------------------------------- */
+
+.section-label {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-h3);
+  font-size: var(--size-body);
+  margin: 10pt 0 3pt 0;
+  color: var(--color-primary);
+}
+
+.section-label::before {
+  content: '\25CB\0020';  /* ○  */
+}
+
+/* ----------------------------------------------------------
+   9. 구분선 + 각주
+   ---------------------------------------------------------- */
+
+hr {
+  border: none;
+  border-top: var(--border-table) solid var(--color-border-light);
+  margin: 12pt var(--content-indent);
+}
+
+.footnote {
+  font-size: var(--size-footnote);
+  color: var(--color-text-muted);
+  margin: 6pt 0 0 var(--content-indent);
+  line-height: var(--line-height-table);
+  padding-top: 4pt;
+  border-top: var(--border-table) solid var(--color-border-light);
+}
+
+/* ----------------------------------------------------------
+   9. 페이지 구성요소
+   ---------------------------------------------------------- */
+
+.page-content {
+  max-height: calc(var(--page-height) - var(--page-margin) * 2 - var(--page-header-reserved));
+  overflow: hidden;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-heading);
+  font-size: var(--size-page-header);
+  color: var(--color-text-page-meta);
+  letter-spacing: 0.5px;
+  margin-bottom: 3mm;
+}
+
+.page-number {
+  position: absolute;
+  bottom: var(--page-num-bottom);
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--size-page-num);
+  color: var(--color-text-page-meta);
+}
+
+.print-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: var(--color-primary);
+  color: var(--color-bg-page);
+  border: none;
+  padding: var(--btn-padding);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: var(--shadow-btn);
+}
+
+.print-btn:hover {
+  background: var(--color-primary-hover);
+}

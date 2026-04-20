@@ -1,0 +1,34 @@
+id: executive-summary
+name: 대표보고 요약
+description: 경영진/대표 대상 핵심 사안 요약 보고서. A4 2~4페이지.
+author: 식스티헤르츠
+version: "1.0"
+keywords:
+  - 대표보고
+  - 경영진
+  - 요약
+  - 전략
+  - 의사결정
+  - 컨소시엄
+  - 검토
+  - 제안
+sections:
+  - id: cover
+    name: 표지
+    required: true
+  - id: body
+    name: 본문
+    required: true
+variables:
+  - name: title
+    type: string
+    required: true
+  - name: authors
+    type: string
+    required: true
+  - name: date
+    type: string
+    required: true
+  - name: classification
+    type: string
+    default: 대외비

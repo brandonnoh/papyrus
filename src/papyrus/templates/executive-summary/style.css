@@ -1,0 +1,18 @@
+/* ============================================================
+   Template-specific Styles — executive-summary
+   base.css에 없는, 이 템플릿 고유의 스타일만 정의합니다.
+   모든 색상은 tokens.css 변수를 참조합니다.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. 케이스 비교표 (Case Table) — executive-summary 전용
+   ---------------------------------------------------------- */
+
+.case-table td:last-child {
+  background: var(--color-bg-emphasis);
+}
+
+.case-table th:last-child {
+  background: var(--color-bg-th);
+}
+

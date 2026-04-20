@@ -1,0 +1,83 @@
+id: meeting-minutes
+name: 회의록
+description: 회의 논의 내용, 결정 사항, 액션 아이템 기록. A4 3~5페이지.
+author: 식스티헤르츠
+version: "1.0"
+keywords:
+  - 회의록
+  - 회의
+  - 미팅
+  - 논의
+  - 결정
+  - 액션아이템
+  - 안건
+  - 참석자
+  - minutes
+sections:
+  - id: cover
+    name: 표지
+    required: true
+  - id: 회의 개요
+    name: 회의 개요
+    required: true
+  - id: 논의 내용
+    name: 논의 내용
+    required: true
+  - id: 결정 사항
+    name: 결정 사항
+    required: false
+  - id: 액션 아이템
+    name: 액션 아이템
+    required: false
+  - id: 다음 회의
+    name: 다음 회의
+    required: false
+variables:
+  - name: title
+    type: string
+    required: true
+  - name: authors
+    type: string
+    required: true
+    description: 주관자 또는 작성자
+  - name: date
+    type: string
+    required: true
+    description: "회의 일시 (예: 2026-04-19 14:00)"
+  - name: classification
+    type: string
+    default: 내부용
+guide_notes: |
+  ## 회의록 마크다운 작성 가이드
+
+  ### frontmatter
+  title, authors, date, classification, template_id 를 기입합니다.
+  classification 기본값은 내부용입니다.
+
+  ### 회의 개요 (필수)
+  첫 섹션. 표로 일시, 장소, 참석자, 안건을 기술합니다.
+
+  | 구분 | 내용 |
+  |---|---|
+  | 일시 | 2026-04-19 (토) 14:00 - 15:30 |
+  | 장소 | 본사 3층 회의실 A |
+  | 참석자 | 홍길동, 김철수, 이영희 |
+  | 안건 | 1. 주제A, 2. 주제B |
+
+  ### 논의 내용 (필수)
+  안건별로 서브섹션(###)으로 나눕니다.
+  핵심 판단, 결론은 인용 블록(>) 으로 기술합니다.
+
+  ### 결정 사항 (선택)
+  항목명: 내용 형식의 리스트로 기술합니다.
+
+  ### 액션 아이템 (선택)
+  표로 항목, 담당자, 기한, 상태를 기술합니다.
+  상태값: 완료 / 진행중 / 대기
+
+  | 항목 | 담당자 | 기한 | 상태 |
+  |---|---|---|---|
+  | 작업명 | 홍길동 | 2026-04-26 | 진행중 |
+
+  ### 다음 회의 (선택)
+  리스트로 일시, 장소, 안건을 기술합니다.

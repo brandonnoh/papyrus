@@ -1,0 +1,71 @@
+/* ============================================================
+   Template-specific Styles — meeting-minutes
+   base.css에 없는, 이 템플릿 고유의 스타일만 정의합니다.
+   모든 색상은 tokens.css 변수를 참조합니다.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. 표지 — 회의록 전용 레이아웃
+   ---------------------------------------------------------- */
+
+.meeting-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border-top: var(--border-cover-top) solid var(--color-primary);
+  border-bottom: var(--border-cover-bottom) solid var(--color-primary);
+}
+
+.meeting-label {
+  font-family: var(--font-heading);
+  font-size: var(--size-h3);
+  font-weight: var(--weight-h3);
+  color: var(--color-text-secondary);
+  letter-spacing: 8px;
+  margin-bottom: 8mm;
+  text-transform: uppercase;
+}
+
+.meeting-cover h1 {
+  margin: 0 0 8mm;
+}
+
+.cover-meta-table {
+  width: auto;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.cover-meta-table td {
+  padding: 3pt 20pt 3pt 8pt;
+  font-family: var(--font-heading);
+  font-size: var(--size-body);
+  border: none;
+  background: none;
+  text-align: left;
+  font-weight: var(--weight-body);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.cover-meta-table td:first-child {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-h3);
+  text-align: right;
+  background: none;
+  min-width: 48pt;
+}
+
+/* ----------------------------------------------------------
+   2. 액션 아이템 테이블 — 4열 구성 강조
+   ---------------------------------------------------------- */
+
+.action-table th:last-child,
+.action-table td:last-child {
+  text-align: center;
+  white-space: nowrap;
+}

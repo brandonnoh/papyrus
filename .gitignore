@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Generated screenshots (작업용 스크린샷)
+report_check*.png
+report_risk_check.png
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Editors
+.vscode/
+.idea/
+
+# Build / Dev
+dist/
+.dev/
+
+# 생성된 보고서 출력물
+/output/
+/papyrus/
+
+# 프로젝트별 예시·문서 (MCP 라이브러리 레포에 불필요)
+examples/
+docs/
+
+# MCP 로컬 설정
+.mcp.json
+.claude/
+
+# 개발용 (레포 비공개)
+tests/
+src/papyrus/STYLE_AUTHORITY.md
