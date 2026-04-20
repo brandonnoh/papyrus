@@ -79,6 +79,9 @@ body {
   .page--body {
     min-height: 0;
   }
+  .page--body + .page--body {
+    break-before: page;
+  }
   .no-print {
     display: none;
   }

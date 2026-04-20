@@ -206,7 +206,7 @@ _PREVIEW_JS = """<script>
     function splitSection(section, page) {
       section.parentNode && section.parentNode.removeChild(section);
       var kids = Array.from(section.children);
-      var wrap = document.createElement('div');
+      var wrap = document.createElement('section');
       wrap.className = section.className;
       page.appendChild(wrap);
       var firstKid = true;
@@ -215,7 +215,7 @@ _PREVIEW_JS = """<script>
         if (!fits(page) && !firstKid) {
           wrap.removeChild(kid);
           page = newPage(false);
-          wrap = document.createElement('div');
+          wrap = document.createElement('section');
           wrap.className = section.className;
           page.appendChild(wrap);
           wrap.appendChild(kid);

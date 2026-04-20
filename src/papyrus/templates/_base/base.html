@@ -37,5 +37,113 @@
   {% endfor %}
 </div>
 {% endblock content %}
+<script>
+(function () {
+  'use strict';
+  var CONTENT_H_PX = (297 - 36) * (96 / 25.4);
+
+  function clsText(page) {
+    return (page.querySelector('.doc-header span') || {}).textContent || '';
+  }
+
+  function makePageEl(cls) {
+    var div = document.createElement('div');
+    div.className = 'page page--body';
+    var hdr = document.createElement('div');
+    hdr.className = 'doc-header';
+    var s1 = document.createElement('span'); s1.textContent = cls;
+    var s2 = document.createElement('span'); s2.textContent = cls;
+    hdr.appendChild(s1); hdr.appendChild(s2);
+    div.appendChild(hdr);
+    return div;
+  }
+
+  function makeSectionEl() {
+    var s = document.createElement('section');
+    s.className = 'doc-section';
+    return s;
+  }
+
+  function blockHeight(el, next) {
+    if (next) return next.getBoundingClientRect().top - el.getBoundingClientRect().top;
+    var st = getComputedStyle(el);
+    return el.getBoundingClientRect().height + parseFloat(st.marginBottom);
+  }
+
+  function collectEntries(page) {
+    var entries = [];
+    page.querySelectorAll('.doc-section').forEach(function (sec) {
+      Array.from(sec.children).forEach(function (child, ci) {
+        entries.push({ el: child, isFirst: ci === 0 });
+      });
+    });
+    return entries;
+  }
+
+  function distributeBlocks(firstPage, cls, entries, heights, availH) {
+    var curPage = firstPage;
+    var curSec = null;
+    var usedH = 0;
+
+    entries.forEach(function (e, i) {
+      var h = heights[i];
+      var isHead = e.el.tagName === 'H2' || e.el.tagName === 'H3';
+      var orphanPad = (isHead && i + 1 < entries.length) ? heights[i + 1] : 0;
+
+      if (usedH > 0 && usedH + h + orphanPad > availH) {
+        var np = makePageEl(cls);
+        curPage.after(np);
+        curPage = np;
+        curSec = null;
+        usedH = 0;
+      }
+
+      if (e.isFirst || curSec === null) {
+        curSec = makeSectionEl();
+        curPage.appendChild(curSec);
+      }
+      curSec.appendChild(e.el);
+      usedH += h;
+    });
+  }
+
+  function run() {
+    // preview.py가 주입한 preview-toolbar가 있으면 해당 시스템에 위임
+    if (document.querySelector('.preview-toolbar')) return;
+    var firstPage = document.querySelector('.page--body');
+    if (!firstPage) return;
+
+    var hdr = firstPage.querySelector('.doc-header');
+    var cls = clsText(firstPage);
+    var hdrH = hdr
+      ? hdr.getBoundingClientRect().height + parseFloat(getComputedStyle(hdr).marginBottom)
+      : 0;
+    var availH = CONTENT_H_PX - hdrH;
+
+    var entries = collectEntries(firstPage);
+    var heights = entries.map(function (e, i) {
+      return blockHeight(e.el, entries[i + 1] ? entries[i + 1].el : null);
+    });
+
+    firstPage.querySelectorAll('.doc-section').forEach(function (s) { s.remove(); });
+    distributeBlocks(firstPage, cls, entries, heights, availH);
+  }
+
+  function scheduleRun() {
+    var imagePromises = Array.from(document.images)
+      .filter(function (img) { return !img.complete; })
+      .map(function (img) {
+        return new Promise(function (resolve) { img.onload = img.onerror = resolve; });
+      });
+    var fontReady = (document.fonts && document.fonts.ready) || Promise.resolve();
+    Promise.all([fontReady].concat(imagePromises)).then(run);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleRun);
+  } else {
+    scheduleRun();
+  }
+}());
+</script>
 </body>
 </html>
