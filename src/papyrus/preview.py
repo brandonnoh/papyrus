@@ -160,33 +160,84 @@ _PREVIEW_JS = """<script>
     var bodyEl = document.querySelector('.page--body');
     if (!bodyEl) return;
 
-    var elements = [];
-    var pages = bodyEl.querySelectorAll('.preview-page');
-    if (pages.length > 0) {
-      pages.forEach(function(pg) {
+    var rawEls = [];
+    var existingPages = Array.from(bodyEl.querySelectorAll('.preview-page'));
+    if (existingPages.length > 0) {
+      existingPages.forEach(function(pg) {
         Array.from(pg.children).forEach(function(el) {
-          if (!el.dataset.papyrusClone && !el.dataset.papyrusPageNum) elements.push(el);
+          if (!el.dataset.papyrusClone && !el.dataset.papyrusPageNum) rawEls.push(el);
         });
         pg.remove();
       });
     } else {
-      elements = Array.from(bodyEl.children);
-      elements.forEach(function(el) { el.remove(); });
+      rawEls = Array.from(bodyEl.children);
+      rawEls.forEach(function(el) { bodyEl.removeChild(el); });
     }
 
     var headerEl = null;
-    var contentEls = [];
-    elements.forEach(function(el) {
+    var sections = [];
+    rawEls.forEach(function(el) {
       if (el.classList.contains('doc-header')) headerEl = el;
-      else contentEls.push(el);
+      else sections.push(el);
     });
 
-    var _ruler = document.createElement('div');
-    _ruler.style.cssText = 'height:297mm;position:absolute;visibility:hidden;pointer-events:none';
-    document.body.appendChild(_ruler);
-    var a4H = _ruler.getBoundingClientRect().height;
-    document.body.removeChild(_ruler);
+    var entries = [];
+    sections.forEach(function(sec) {
+      if (sec.classList.contains('doc-section')) {
+        var cls = sec.className;
+        Array.from(sec.children).forEach(function(child) {
+          entries.push({el: child, wrapClass: cls});
+        });
+      } else {
+        entries.push({el: sec, wrapClass: null});
+      }
+    });
+
+    if (entries.length === 0) return;
+
+    var measPage = document.createElement('div');
+    measPage.className = 'preview-page';
+    measPage.style.cssText = 'visibility:hidden;position:absolute;top:0;left:-9999px';
+    document.body.appendChild(measPage);
+    if (headerEl) measPage.appendChild(headerEl.cloneNode(true));
+    var measSec = document.createElement('section');
+    measSec.className = 'doc-section';
+    measPage.appendChild(measSec);
+    entries.forEach(function(e) { measSec.appendChild(e.el); });
+
+    var heights = entries.map(function(e, i) {
+      var next = i + 1 < entries.length ? entries[i + 1].el : null;
+      if (next) return next.getBoundingClientRect().top - e.el.getBoundingClientRect().top;
+      var rect = e.el.getBoundingClientRect();
+      return rect.height + parseFloat(window.getComputedStyle(e.el).marginBottom || '0');
+    });
+
+    var r1 = document.createElement('div');
+    r1.style.cssText = 'height:297mm;position:absolute;visibility:hidden;pointer-events:none';
+    var r2 = document.createElement('div');
+    r2.style.cssText = 'height:18mm;position:absolute;visibility:hidden;pointer-events:none';
+    document.body.appendChild(r1);
+    document.body.appendChild(r2);
+    var pageH = r1.offsetHeight;
+    var marginPx = r2.offsetHeight;
+    document.body.removeChild(r1);
+    document.body.removeChild(r2);
+
+    var hdrH = 0;
+    var measHdr = measPage.querySelector('.doc-header');
+    if (measHdr) {
+      var hst = window.getComputedStyle(measHdr);
+      hdrH = measHdr.getBoundingClientRect().height + parseFloat(hst.marginBottom || '0');
+    }
+    var availH = pageH - 2 * marginPx - hdrH;
+
+    document.body.removeChild(measPage);
+
     var allPages = [];
+    var currentPage = null;
+    var curWrap = null;
+    var curWrapClass = null;
+    var usedH = 0;
 
     function newPage(isFirst) {
       var page = document.createElement('div');
@@ -202,45 +253,37 @@ _PREVIEW_JS = """<script>
       numEl.dataset.papyrusPageNum = 'true';
       page.appendChild(numEl);
       allPages.push({page: page, numEl: numEl});
+      curWrap = null;
+      curWrapClass = null;
       return page;
     }
 
-    function fits(page) { return page.scrollHeight <= a4H; }
+    currentPage = newPage(true);
 
-    function splitSection(section, page) {
-      section.parentNode && section.parentNode.removeChild(section);
-      var kids = Array.from(section.children);
-      var wrap = document.createElement('section');
-      wrap.className = section.className;
-      page.appendChild(wrap);
-      var firstKid = true;
-      kids.forEach(function(kid) {
-        wrap.appendChild(kid);
-        if (!fits(page) && !firstKid) {
-          wrap.removeChild(kid);
-          page = newPage(false);
-          wrap = document.createElement('section');
-          wrap.className = section.className;
-          page.appendChild(wrap);
-          wrap.appendChild(kid);
-          firstKid = true;
-        } else { firstKid = false; }
-      });
-      return page;
-    }
+    entries.forEach(function(e, i) {
+      var h = heights[i];
+      var isHead = e.el.tagName === 'H2' || e.el.tagName === 'H3';
+      var orphanPad = (isHead && i + 1 < entries.length) ? heights[i + 1] : 0;
 
-    var currentPage = newPage(true);
-    var firstOnPage = true;
-    contentEls.forEach(function(el) {
-      currentPage.appendChild(el);
-      if (fits(currentPage) || firstOnPage) { firstOnPage = false; return; }
-      el.parentNode.removeChild(el);
-      currentPage = newPage(false);
-      firstOnPage = false;
-      currentPage.appendChild(el);
-      if (!fits(currentPage) && el.classList.contains('doc-section')) {
-        currentPage = splitSection(el, currentPage);
+      if (usedH > 0 && usedH + h + orphanPad > availH) {
+        currentPage = newPage(false);
+        usedH = 0;
       }
+
+      if (e.wrapClass !== null) {
+        if (!curWrap || curWrapClass !== e.wrapClass) {
+          curWrap = document.createElement('section');
+          curWrap.className = e.wrapClass;
+          currentPage.appendChild(curWrap);
+          curWrapClass = e.wrapClass;
+        }
+        curWrap.appendChild(e.el);
+      } else {
+        currentPage.appendChild(e.el);
+        curWrap = null;
+        curWrapClass = null;
+      }
+      usedH += h;
     });
 
     var hasCover = !!document.querySelector('.page--cover');
