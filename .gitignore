@@ -35,6 +35,7 @@ docs/
 # MCP 로컬 설정
 .mcp.json
 .claude/
+.serena/
 
 # 개발용 (레포 비공개)
 tests/
