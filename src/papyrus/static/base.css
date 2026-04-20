@@ -78,14 +78,8 @@ body {
   .no-print {
     display: none;
   }
-  .doc-section {
-    break-inside: avoid-page;
-  }
-  .doc-section h2 {
-    break-before: page;
-  }
-  .doc-section:first-child h2 {
-    break-before: avoid;
+  .doc-section + .doc-section {
+    border-top: none;
   }
   h2, h3 {
     break-after: avoid;
