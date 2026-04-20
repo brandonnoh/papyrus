@@ -415,7 +415,6 @@ hr {
 .doc-section + .doc-section {
   margin-top: 10mm;
   padding-top: 8mm;
-  border-top: 1px dashed var(--color-border-light);
 }
 
 .print-btn {

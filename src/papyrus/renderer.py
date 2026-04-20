@@ -218,13 +218,18 @@ def _read_text(path: Path) -> str:
 
 def _patch_brand_colors(css: str, brand: BrandConfig) -> str:
     """Replace default brand colors with values from BrandConfig."""
-    css = css.replace(
-        "--color-primary: #2c2c2c",
-        f"--color-primary: {brand.color_primary}",
+    import re
+    css = re.sub(
+        r"(--color-primary:\s*)[^;]+",
+        rf"\g<1>{brand.color_primary}",
+        css,
+        count=1,
     )
-    css = css.replace(
-        "--color-primary-hover: #1a1a1a",
-        f"--color-primary-hover: {brand.color_primary_hover}",
+    css = re.sub(
+        r"(--color-primary-hover:\s*)[^;]+",
+        rf"\g<1>{brand.color_primary_hover}",
+        css,
+        count=1,
     )
     return css
 

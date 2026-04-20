@@ -9,32 +9,28 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from socketserver import ThreadingMixIn
 
-# ---------------------------------------------------------------------------
-# Markers & injected assets
-# ---------------------------------------------------------------------------
-
 _PREVIEW_MARKER_START = "<!-- papyrus-preview-start -->"
 _PREVIEW_MARKER_END = "<!-- papyrus-preview-end -->"
 
 _PREVIEW_CSS = """<style>
 @media screen {
-  .page-break-indicator {
-    width: 100%;
-    height: 24px;
-    margin: 0;
-    background: #e8e8e8;
-    border-top: 2px dashed #bbb;
-    border-bottom: 2px dashed #bbb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font: 10px/1 'Noto Sans KR', sans-serif;
-    color: #999;
-    letter-spacing: 0.5px;
-    pointer-events: none;
-    user-select: none;
+  .page--body {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-height: 0 !important;
   }
-}
+  .page--body::after { display: none !important; }
+  .preview-page {
+    width: var(--page-width);
+    min-height: var(--page-height);
+    margin: 12px auto;
+    padding: var(--page-margin);
+    background: var(--color-bg-page);
+    box-shadow: var(--shadow-page);
+    box-sizing: border-box;
+    position: relative;
+  }
   [contenteditable]:hover { outline: 1px dashed #b0c4de; border-radius: 2px; }
   [contenteditable]:focus { outline: 2px solid #09356E; border-radius: 2px; }
   .preview-toolbar {
@@ -64,11 +60,6 @@ _PREVIEW_CSS = """<style>
     pointer-events: none; z-index: 2000;
   }
   .save-toast.show { opacity: 1; }
-}
-@media print {
-  .preview-toolbar, .save-toast, .page-break-indicator { display: none !important; }
-}
-@media screen {
   .doc-section { position: relative; }
   .drag-handle {
     position: absolute; left: -20px; top: 8px;
@@ -82,7 +73,8 @@ _PREVIEW_CSS = """<style>
   .doc-section.drop-target { border-top: 3px solid #09356E; }
 }
 @media print {
-  .drag-handle { display: none !important; }
+  .preview-toolbar, .save-toast, .drag-handle { display: none !important; }
+  .preview-page { all: unset; }
 }
 </style>"""
 
@@ -91,14 +83,12 @@ _PREVIEW_JS = """<script>
   var SAVE_URL = '{{SAVE_URL}}';
   var _dirty = false;
 
-  // 툴바 삽입
   var toolbar = document.createElement('div');
   toolbar.className = 'preview-toolbar';
   toolbar.innerHTML = '<span class="dirty-indicator"></span><span>편집 모드</span>'
     + '<button onclick="window.__papyrusSave()">저장 (⌘S)</button>'
     + '<button onclick="window.print()">인쇄</button>';
 
-  // 토스트 삽입
   var toast = document.createElement('div');
   toast.className = 'save-toast';
   toast.textContent = '저장됨 ✓';
@@ -106,25 +96,28 @@ _PREVIEW_JS = """<script>
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(toolbar);
     document.body.appendChild(toast);
-
-    // contenteditable 활성화
     document.querySelectorAll('.doc-section').forEach(function(sec) {
       sec.setAttribute('contenteditable', 'true');
     });
-
-    // dirty 감지
     var bodyEl = document.querySelector('.page--body');
     if (bodyEl) {
       bodyEl.addEventListener('input', function() {
         _dirty = true;
         toolbar.classList.add('is-dirty');
-        if (window.__papyrusRefreshPages) window.__papyrusRefreshPages();
       });
     }
   });
 
-  // 저장
   window.__papyrusSave = function() {
+    var bodyEl = document.querySelector('.page--body');
+    var pages = bodyEl ? Array.from(bodyEl.querySelectorAll('.preview-page')) : [];
+    var savedEls = [];
+    pages.forEach(function(pg) {
+      Array.from(pg.children).forEach(function(el) { savedEls.push(el); });
+    });
+    pages.forEach(function(pg) { pg.remove(); });
+    savedEls.forEach(function(el) { bodyEl && bodyEl.appendChild(el); });
+
     document.querySelectorAll('[contenteditable]').forEach(function(el) {
       el.removeAttribute('contenteditable');
     });
@@ -132,6 +125,8 @@ _PREVIEW_JS = """<script>
     document.querySelectorAll('.doc-section').forEach(function(sec) {
       sec.setAttribute('contenteditable', 'true');
     });
+    if (window.__papyrusBuildPages) window.__papyrusBuildPages();
+
     var clean = html.replace(
       /<!--\\s*papyrus-preview-start\\s*-->[\\s\\S]*?<!--\\s*papyrus-preview-end\\s*-->/g, ''
     );
@@ -149,7 +144,6 @@ _PREVIEW_JS = """<script>
     });
   };
 
-  // Cmd+S / Ctrl+S
   document.addEventListener('keydown', function(e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {
       e.preventDefault();
@@ -158,31 +152,50 @@ _PREVIEW_JS = """<script>
   });
 })();
 (function() {
-  function refreshPageBreaks() {
+  function buildPreviewPages() {
     var bodyEl = document.querySelector('.page--body');
     if (!bodyEl) return;
-    bodyEl.querySelectorAll('.page-break-indicator').forEach(function(el) { el.remove(); });
+
+    var elements = [];
+    var pages = bodyEl.querySelectorAll('.preview-page');
+    if (pages.length > 0) {
+      pages.forEach(function(pg) {
+        Array.from(pg.children).forEach(function(el) { elements.push(el); });
+      });
+      pages.forEach(function(pg) { pg.remove(); });
+    } else {
+      elements = Array.from(bodyEl.children);
+      elements.forEach(function(el) { el.remove(); });
+    }
+
     var a4H = bodyEl.offsetWidth * (297 / 210);
-    var sections = Array.from(bodyEl.querySelectorAll('.doc-section'));
-    var pageNum = 1;
-    sections.forEach(function(sec) {
-      var secTop = sec.offsetTop;
-      while (secTop > pageNum * a4H) {
-        var ind = document.createElement('div');
-        ind.className = 'page-break-indicator';
-        ind.textContent = pageNum + '페이지 / ' + (pageNum + 1) + '페이지';
-        sec.parentNode.insertBefore(ind, sec);
-        pageNum++;
+
+    function newPage() {
+      var page = document.createElement('div');
+      page.className = 'preview-page';
+      bodyEl.appendChild(page);
+      return page;
+    }
+
+    var currentPage = newPage();
+    elements.forEach(function(el) {
+      currentPage.appendChild(el);
+      if (currentPage.scrollHeight > a4H && currentPage.children.length > 1) {
+        currentPage.removeChild(el);
+        currentPage = newPage();
+        currentPage.appendChild(el);
       }
     });
   }
-  document.addEventListener('DOMContentLoaded', refreshPageBreaks);
+
+  document.addEventListener('DOMContentLoaded', buildPreviewPages);
   if (typeof ResizeObserver !== 'undefined') {
-    var ro = new ResizeObserver(refreshPageBreaks);
-    var bodyEl = document.querySelector('.page--body');
-    if (bodyEl) ro.observe(bodyEl);
+    document.addEventListener('DOMContentLoaded', function() {
+      var bodyEl = document.querySelector('.page--body');
+      if (bodyEl) { new ResizeObserver(buildPreviewPages).observe(bodyEl); }
+    });
   }
-  window.__papyrusRefreshPages = refreshPageBreaks;
+  window.__papyrusBuildPages = buildPreviewPages;
 })();
 (function() {
   var _draggingEl = null;
@@ -207,8 +220,8 @@ _PREVIEW_JS = """<script>
         document.querySelectorAll('.drop-target').forEach(function(el) {
           el.classList.remove('drop-target');
         });
+        if (window.__papyrusBuildPages) window.__papyrusBuildPages();
         if (window.__papyrusSave) window.__papyrusSave();
-        if (window.__papyrusRefreshPages) window.__papyrusRefreshPages();
       });
       sec.addEventListener('dragover', function(e) {
         e.preventDefault();
@@ -232,11 +245,6 @@ _PREVIEW_JS = """<script>
 </script>"""
 
 
-# ---------------------------------------------------------------------------
-# Injection helper
-# ---------------------------------------------------------------------------
-
-
 def _inject_preview(html: str, base_url: str) -> str:
     """Inject preview CSS/JS markers before </body>."""
     save_url = base_url.rstrip("/") + "/save"
@@ -247,11 +255,6 @@ def _inject_preview(html: str, base_url: str) -> str:
         + f"\n{_PREVIEW_MARKER_END}\n"
     )
     return html.replace("</body>", snippet + "</body>", 1)
-
-
-# ---------------------------------------------------------------------------
-# HTTP plumbing
-# ---------------------------------------------------------------------------
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -290,11 +293,6 @@ class _Handler(BaseHTTPRequestHandler):
 
 class _ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
 
 
 class PreviewServer:
