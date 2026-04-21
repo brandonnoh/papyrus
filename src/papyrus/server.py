@@ -65,7 +65,14 @@ def get_template_guide_tool(template_id: str) -> dict:
     """선택된 템플릿의 작성 가이드를 반환합니다. list_templates → 사용자 등급 확인 → 템플릿 확정 이후에만 호출하세요.
     섹션 구조, 필수 변수, 마크다운 작성 예시를 포함합니다."""
     meta = get_template(TEMPLATES_DIR, template_id)
-    return get_template_guide(meta)
+    guide = get_template_guide(meta)
+    guide["footnote_usage"] = (
+        "인라인 참조: [^id] 형태로 본문에 삽입 (예: 시장 점유율 35%[^src1])\n"
+        "각주 정의: [^id]: 내용 을 해당 섹션 끝에 작성\n"
+        "출처 표기, 보충 설명 모두 가능\n"
+        "각주는 자동으로 문서 마지막 '참고문헌' 페이지에 모아 표시됨"
+    )
+    return guide
 
 
 @mcp.tool()
@@ -325,6 +332,12 @@ def start_report() -> str:
         "  빨강 위험: `> [!danger] 즉각 조치가 필요한 내용`",
         "  칼아웃은 한 줄만 지원합니다. 여러 줄이 필요하면 칼아웃을 각각 따로 씁니다.",
         "  인사이트용 `>` 와 혼동 금지 — 칼아웃은 [!TYPE] 태그가 있을 때만 색상이 바뀝니다.",
+        "",
+        "## 각주 사용법",
+        "- 인라인 참조: `[^id]` 형태로 본문에 삽입 (예: `시장 점유율 35%[^src1]`)",
+        "- 각주 정의: `[^id]: 내용` 을 해당 섹션 끝에 작성",
+        "- 출처 표기, 보충 설명 모두 가능",
+        "- 각주는 자동으로 문서 마지막 \"참고문헌\" 페이지에 모아 표시됨",
         "",
         "## generate_report_tool 호출 시 필수 사항",
         "- **output_dir는 현재 작업 디렉토리(cwd) 절대경로를 전달하세요.**",

@@ -156,6 +156,7 @@ def _render_template(
         classification=report_data.classification or "대외비",
         pages=pages,
         sections=report_data.sections,
+        footnotes_html=report_data.footnotes_html,
         **css,
     )
 

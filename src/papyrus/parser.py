@@ -37,6 +37,7 @@ class ReportData:
     classification: str
     template_id: str
     sections: list[Section] = field(default_factory=list)
+    footnotes_html: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -300,13 +301,17 @@ def _lint_blockquote_usage(text: str, errors: list[str]) -> None:
 
 def parse_markdown(text: str) -> ReportData:
     """Parse full markdown text into a ReportData structure."""
+    from papyrus._footnote_utils import render_sections_with_footnotes
+
     meta, body = parse_frontmatter(text)
     sections = split_sections(body)
 
-    for section in sections:
+    # Full-body rendering for global footnote numbering
+    section_htmls, footnotes_html = render_sections_with_footnotes(sections)
+    for section, html in zip(sections, section_htmls):
+        section.html_content = html
         section.tables = parse_tables(section.content)
         section.key_messages = extract_key_messages(section.content)
-        section.html_content = render_section_html(section)
         for sub in section.subsections:
             sub.tables = parse_tables(sub.content)
             sub.key_messages = extract_key_messages(sub.content)
@@ -319,4 +324,5 @@ def parse_markdown(text: str) -> ReportData:
         classification=meta.get("classification", ""),
         template_id=meta.get("template_id", ""),
         sections=sections,
+        footnotes_html=footnotes_html,
     )

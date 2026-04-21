@@ -439,6 +439,18 @@ hr {
   border-top: var(--border-table) solid var(--color-border-light);
 }
 
+/* 각주 인라인 참조 */
+sup.footnote-ref a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.75em;
+}
+
+/* 각주 역참조 링크 — 인쇄 보고서에 불필요 */
+.footnote-backref {
+  display: none;
+}
+
 /* ----------------------------------------------------------
    9. 페이지 구성요소
    ---------------------------------------------------------- */
