@@ -82,6 +82,14 @@
   --spacing-table-top: 6pt;
   --spacing-table-bottom: 3pt;
 
+  /* ===== 콜아웃 변형 ===== */
+  --color-key-message-warning-text: #92400E;
+  --color-key-message-warning-bg: #FFF7ED;
+  --color-key-message-warning-border: #F97316;
+  --color-key-message-danger-text: #991B1B;
+  --color-key-message-danger-bg: #FFF1F2;
+  --color-key-message-danger-border: #EF4444;
+
   /* ===== 워터마크 ===== */
   --watermark-opacity: 0.04;
   --watermark-rotation: -30deg;

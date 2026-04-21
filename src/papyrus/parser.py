@@ -192,14 +192,28 @@ def extract_key_messages(content: str) -> list[str]:
 # 5. render_section_html
 # ---------------------------------------------------------------------------
 
+_CALLOUT_LINE_RE = re.compile(r"^> \[!(warning|danger)\] ?(.*)$", re.IGNORECASE | re.MULTILINE)
+
+
 def render_section_html(section: Section) -> str:
     """Convert section markdown to HTML, replacing blockquotes."""
-    raw_html = md.markdown(section.content, extensions=["tables"])
+    preprocessed = _preprocess_callouts(section.content)
+    raw_html = md.markdown(preprocessed, extensions=["tables"])
     return _replace_blockquotes(raw_html)
 
 
+def _preprocess_callouts(content: str) -> str:
+    """Convert > [!TYPE] lines to raw HTML before markdown parsing."""
+    def _sub(m: re.Match) -> str:
+        ctype = m.group(1).lower()
+        text = m.group(2)
+        return f'<div class="key-message key-message--{ctype}">{text}</div>'
+
+    return _CALLOUT_LINE_RE.sub(_sub, content)
+
+
 def _replace_blockquotes(html: str) -> str:
-    """Replace <blockquote> with <div class='key-message'>, strip inner <p>."""
+    """Replace <blockquote> with <div class='key-message'>."""
     html = html.replace("<blockquote>\n<p>", '<div class="key-message">')
     html = html.replace("<blockquote><p>", '<div class="key-message">')
     html = html.replace("</p>\n</blockquote>", "</div>")
