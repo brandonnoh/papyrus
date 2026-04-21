@@ -439,6 +439,8 @@ hr {
   border-top: var(--border-table) solid var(--color-border-light);
 }
 
+.footnote hr { display: none; }
+
 /* p 기본 font-size 오버라이드 방지 */
 .footnote p,
 .footnote li {
