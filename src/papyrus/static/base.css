@@ -439,11 +439,43 @@ hr {
   border-top: var(--border-table) solid var(--color-border-light);
 }
 
-/* 각주 인라인 참조 */
+/* p 기본 font-size 오버라이드 방지 */
+.footnote p,
+.footnote li {
+  font-size: var(--size-footnote);
+  color: var(--color-text-muted);
+  margin: 0 0 3pt 0;
+}
+
+/* 참고문헌 목록: 1) 2) 형식 */
+.footnote ol {
+  list-style: none;
+  counter-reset: fn-counter;
+  padding-left: 1.8em;
+}
+
+.footnote ol li {
+  counter-increment: fn-counter;
+  position: relative;
+}
+
+.footnote ol li::before {
+  content: counter(fn-counter) ')';
+  position: absolute;
+  left: -1.8em;
+  color: var(--color-text-muted);
+  font-size: var(--size-footnote);
+}
+
+/* 각주 인라인 참조: 1) 형식 */
 sup.footnote-ref a {
   color: var(--color-primary);
   text-decoration: none;
   font-size: 0.75em;
+}
+
+sup.footnote-ref a::after {
+  content: ')';
 }
 
 /* 각주 역참조 링크 — 인쇄 보고서에 불필요 */

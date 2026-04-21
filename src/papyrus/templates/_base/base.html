@@ -35,18 +35,13 @@
     {{ section.html_content }}
   </section>
   {% endfor %}
-</div>
-{% if footnotes_html %}
-<div class="page page--body page--footnotes">
-  <div class="doc-header">
-    <span>{{ classification }}</span><span>{{ classification }}</span>
-  </div>
+  {% if footnotes_html %}
   <section class="doc-section">
     <h2>참고문헌</h2>
     {{ footnotes_html }}
   </section>
+  {% endif %}
 </div>
-{% endif %}
 {% endblock content %}
 <script>
 (function () {

@@ -54,6 +54,19 @@ src/papyrus/
 - blockquote (`>`) = 작성자 인사이트 전용, 수치/사실 나열 금지
 - 파일 300줄 / 함수 20줄 제한
 
+## 개발 시 절대 금지 사항
+
+- **MCP 서버 프로세스 kill 금지** — `pkill`, `kill` 등으로 papyrus MCP 서버를 임의 종료하지 않는다.
+  코드 변경 후 반영이 필요하면 사용자에게 `/mcp` 재연결을 안내하는 것에 그친다.
+  서버를 죽이면 Claude Code MCP 연결이 끊어지고 사용자가 수동으로 재연결해야 한다.
+
+## preview 모드 CSS 우선순위 규칙
+
+- `preview.py`의 `_PREVIEW_CSS`는 `.page--body { background: transparent !important }` 를 적용한다.
+- 특정 `.page--body` 하위 변형(예: `page--footnotes`)을 예외 처리하려면
+  **복합 선택자** `.page--body.page--footnotes` 를 써서 특이도(specificity)를 높여야 한다.
+  단순 `.page--footnotes` 선택자는 특이도가 같아 순서에만 의존하므로 신뢰할 수 없다.
+
 ## 템플릿 추가 방법
 
 `src/papyrus/templates/<id>/` 디렉토리에 세 파일 생성:
