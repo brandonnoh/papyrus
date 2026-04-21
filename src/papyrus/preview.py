@@ -263,7 +263,15 @@ _PREVIEW_JS = """<script>
     entries.forEach(function(e, i) {
       var h = heights[i];
       var isHead = e.el.tagName === 'H2' || e.el.tagName === 'H3';
-      var orphanPad = (isHead && i + 1 < entries.length) ? heights[i + 1] : 0;
+      var orphanPad = 0;
+      if (isHead) {
+        var j = i + 1;
+        while (j < entries.length) {
+          orphanPad += heights[j];
+          if (entries[j].el.tagName !== 'H2' && entries[j].el.tagName !== 'H3') break;
+          j++;
+        }
+      }
 
       if (usedH > 0 && usedH + h + orphanPad > availH) {
         currentPage = newPage(false);
