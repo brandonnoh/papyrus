@@ -328,18 +328,33 @@ _PREVIEW_JS = """<script>
         }
       }
 
-      if (e.el.tagName === 'TABLE' && usedH + h > availH) {
-        var remainH = availH - usedH;
-        if (remainH < 0) remainH = availH;
-        if (remainH > 60) {
-          var split = splitTableByRows(e.el, remainH);
-          if (split) {
-            entries.splice(ei, 1,
-              {el: split.parts[0], wrapClass: e.wrapClass},
-              {el: split.parts[1], wrapClass: e.wrapClass}
-            );
-            heights.splice(ei, 1, split.heights[0], split.heights[1]);
+      if (e.el.tagName === 'TABLE') {
+        var pgTop = currentPage.getBoundingClientRect().top;
+        var liveRemain = (pgTop + marginPx + availH) - (function() {
+          var lastBottom = pgTop + marginPx + hdrH;
+          currentPage.querySelectorAll('section').forEach(function(s) {
+            var b = s.getBoundingClientRect().bottom;
+            if (b > lastBottom) lastBottom = b;
+          });
+          return lastBottom;
+        })();
+
+        if (liveRemain < h) {
+          if (usedH > 0) {
+            currentPage = newPage(false);
+            usedH = 0;
             continue;
+          }
+          if (liveRemain > 60) {
+            var split = splitTableByRows(e.el, liveRemain);
+            if (split) {
+              entries.splice(ei, 1,
+                {el: split.parts[0], wrapClass: e.wrapClass},
+                {el: split.parts[1], wrapClass: e.wrapClass}
+              );
+              heights.splice(ei, 1, split.heights[0], split.heights[1]);
+              continue;
+            }
           }
         }
       }
