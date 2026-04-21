@@ -415,6 +415,10 @@ _PREVIEW_JS = """<script>
     allPages.forEach(function(p, i) {
       p.numEl.textContent = (i + 1 + offset) + ' / ' + total;
     });
+
+    document.querySelectorAll('.doc-section').forEach(function(sec) {
+      sec.setAttribute('contenteditable', 'true');
+    });
   }
 
   var _buildTimer = null;
