@@ -340,11 +340,6 @@ _PREVIEW_JS = """<script>
         })();
 
         if (liveRemain < h) {
-          if (usedH > 0) {
-            currentPage = newPage(false);
-            usedH = 0;
-            continue;
-          }
           if (liveRemain > 60) {
             var split = splitTableByRows(e.el, liveRemain);
             if (split) {
@@ -355,6 +350,11 @@ _PREVIEW_JS = """<script>
               heights.splice(ei, 1, split.heights[0], split.heights[1]);
               continue;
             }
+          }
+          if (usedH > 0) {
+            currentPage = newPage(false);
+            usedH = 0;
+            continue;
           }
         }
       }
