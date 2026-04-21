@@ -66,12 +66,20 @@ def get_template_guide_tool(template_id: str) -> dict:
     섹션 구조, 필수 변수, 마크다운 작성 예시를 포함합니다."""
     meta = get_template(TEMPLATES_DIR, template_id)
     guide = get_template_guide(meta)
-    guide["footnote_usage"] = (
-        "인라인 참조: [^id] 형태로 본문에 삽입 (예: 시장 점유율 35%[^src1])\n"
-        "각주 정의: [^id]: 내용 을 해당 섹션 끝에 작성\n"
-        "출처 표기, 보충 설명 모두 가능\n"
-        "각주는 자동으로 문서 마지막 '참고문헌' 페이지에 모아 표시됨"
+    footnote_section = (
+        "\n### 각주 (출처·보충 설명)\n"
+        "인라인 참조: `[^id]` 형태로 본문에 삽입합니다.\n"
+        "각주 정의: `[^id]: 내용` 을 해당 섹션 끝에 작성합니다.\n"
+        "출처 표기와 보충 설명 모두 가능합니다.\n"
+        "각주는 자동으로 문서 마지막 '참고문헌' 페이지에 모아 표시됩니다.\n\n"
+        "예시:\n"
+        "```\n"
+        "시장 규모는 연 12% 성장 중[^src1]이며, 국내는 8%[^src2] 수준입니다.\n\n"
+        "[^src1]: McKinsey Global Report, 2024\n"
+        "[^src2]: 한국IDC 연간 보고서, Q3 2024\n"
+        "```\n"
     )
+    guide["guide_notes"] = guide.get("guide_notes", "") + footnote_section
     return guide
 
 
