@@ -258,18 +258,89 @@ _PREVIEW_JS = """<script>
       return page;
     }
 
+    function splitTableByRows(table, remainH) {
+      var thead = table.querySelector('thead');
+      var tbody = table.querySelector('tbody');
+      if (!tbody) return null;
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      if (rows.length <= 1) return null;
+
+      var md = document.createElement('div');
+      md.className = 'preview-page';
+      md.style.cssText = 'visibility:hidden;position:absolute;top:0;left:-9999px';
+      document.body.appendChild(md);
+      var ms = document.createElement('section');
+      ms.className = 'doc-section';
+      md.appendChild(ms);
+      var mT = table.cloneNode(false);
+      if (thead) mT.appendChild(thead.cloneNode(true));
+      var mB = document.createElement('tbody');
+      mT.appendChild(mB);
+      ms.appendChild(mT);
+
+      var splitAt = rows.length;
+      for (var k = 0; k < rows.length; k++) {
+        mB.appendChild(rows[k].cloneNode(true));
+        if (mT.getBoundingClientRect().height > remainH) { splitAt = k; break; }
+      }
+      document.body.removeChild(md);
+      if (splitAt === 0 || splitAt === rows.length) return null;
+
+      var t1 = table.cloneNode(false);
+      if (thead) t1.appendChild(thead.cloneNode(true));
+      var b1 = document.createElement('tbody'); t1.appendChild(b1);
+      var t2 = table.cloneNode(false);
+      if (thead) t2.appendChild(thead.cloneNode(true));
+      var b2 = document.createElement('tbody'); t2.appendChild(b2);
+      rows.forEach(function(row, idx) { (idx < splitAt ? b1 : b2).appendChild(row); });
+
+      var md2 = document.createElement('div');
+      md2.className = 'preview-page';
+      md2.style.cssText = 'visibility:hidden;position:absolute;top:0;left:-9999px';
+      document.body.appendChild(md2);
+      var ms2 = document.createElement('section');
+      ms2.className = 'doc-section';
+      md2.appendChild(ms2);
+      var c1 = t1.cloneNode(true); ms2.appendChild(c1);
+      var rh1 = c1.getBoundingClientRect().height;
+      ms2.removeChild(c1);
+      var c2 = t2.cloneNode(true); ms2.appendChild(c2);
+      var rh2 = c2.getBoundingClientRect().height;
+      document.body.removeChild(md2);
+
+      return {parts: [t1, t2], heights: [rh1, rh2]};
+    }
+
     currentPage = newPage(true);
 
-    entries.forEach(function(e, i) {
-      var h = heights[i];
+    var ei = 0;
+    while (ei < entries.length) {
+      var e = entries[ei];
+      var h = heights[ei];
       var isHead = e.el.tagName === 'H2' || e.el.tagName === 'H3';
       var orphanPad = 0;
       if (isHead) {
-        var j = i + 1;
+        var j = ei + 1;
         while (j < entries.length) {
           orphanPad += heights[j];
           if (entries[j].el.tagName !== 'H2' && entries[j].el.tagName !== 'H3') break;
           j++;
+        }
+      }
+
+      if (e.el.tagName === 'TABLE' && usedH + h > availH) {
+        var remainH = availH - usedH;
+        if (remainH < 0) remainH = availH;
+        if (remainH > 60) {
+          var split = splitTableByRows(e.el, remainH);
+          if (split) {
+            entries.splice(ei, 1,
+              {el: split.parts[0], wrapClass: e.wrapClass},
+              {el: split.parts[1], wrapClass: e.wrapClass}
+            );
+            heights.splice(ei, 1, split.heights[0], split.heights[1]);
+            continue;
+          }
         }
       }
 
@@ -292,7 +363,8 @@ _PREVIEW_JS = """<script>
         curWrapClass = null;
       }
       usedH += h;
-    });
+      ei++;
+    }
 
     var hasCover = !!document.querySelector('.page--cover');
     var offset = hasCover ? 1 : 0;
