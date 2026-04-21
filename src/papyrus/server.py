@@ -11,7 +11,7 @@ from .catalog import (
     get_template_guide,
 )
 from .parser import fix_markdown, parse_markdown
-from .preview import open_preview
+
 from .renderer import render_report, save_report
 
 mcp = FastMCP("papyrus")
@@ -168,8 +168,7 @@ def generate_report_tool(
     saved = save_report(html, out_dir / output_filename)
     md_path = saved.with_suffix(".md")
     md_path.write_text(markdown_content, encoding="utf-8")
-    _preview_server = open_preview(saved)
-    url = _preview_server.url
+    url = saved.as_uri()
     notices = []
     if saved.name != output_filename:
         notices.append(f"[파일명 변경] '{output_filename}' 이미 존재 → '{saved.name}'으로 저장")
