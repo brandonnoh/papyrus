@@ -467,14 +467,13 @@ hr {
   font-size: var(--size-footnote);
 }
 
-/* 각주 인라인 참조: 1) 형식 */
-sup.footnote-ref a {
+/* 각주 인라인 참조: 1) 형식 — <a class="footnote-ref"> 기준 */
+a.footnote-ref {
   color: var(--color-primary);
   text-decoration: none;
-  font-size: 0.75em;
 }
 
-sup.footnote-ref a::after {
+a.footnote-ref::after {
   content: ')';
 }
 

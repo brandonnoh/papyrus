@@ -14,7 +14,7 @@
   width: 100%;
   text-align: center;
   padding: 8mm 0 10mm;
-  margin-bottom: 25mm;
+  margin-bottom: 60mm;
   border-top: var(--border-cover-top) solid var(--color-primary);
   border-bottom: var(--border-cover-bottom) solid var(--color-primary);
 }

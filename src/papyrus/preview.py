@@ -387,7 +387,8 @@ _PREVIEW_JS = """<script>
         }
       }
 
-      if (usedH > 0 && usedH + h + orphanPad > availH) {
+      var forceBreak = e.el.dataset && e.el.dataset.pageBreakBefore === 'true';
+      if (usedH > 0 && (forceBreak || usedH + h + orphanPad > availH)) {
         currentPage = newPage(false);
         usedH = 0;
       }

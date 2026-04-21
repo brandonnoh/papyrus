@@ -37,7 +37,7 @@
   {% endfor %}
   {% if footnotes_html %}
   <section class="doc-section">
-    <h2>참고문헌</h2>
+    <h2 data-page-break-before="true">참고문헌</h2>
     {{ footnotes_html }}
   </section>
   {% endif %}
@@ -130,7 +130,8 @@
         }
       }
 
-      if (usedH > 0 && usedH + h + orphanPad > availH) {
+      var forceBreak = e.el.dataset && e.el.dataset.pageBreakBefore === 'true';
+      if (usedH > 0 && (forceBreak || usedH + h + orphanPad > availH)) {
         var np = makePageEl(cls);
         curPage.after(np);
         curPage = np;
