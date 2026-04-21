@@ -107,8 +107,11 @@ def render_report(
 
     is_custom = template_id == "custom"
     if is_custom:
-        meta = _custom_meta()
-        css = _prepare_css_custom(static_dir)
+        try:
+            meta = get_template(templates_dir, "custom")
+        except FileNotFoundError:
+            meta = _custom_meta()
+        css = prepare_css(static_dir, meta)
     else:
         meta = get_template(templates_dir, template_id)
         css = prepare_css(static_dir, meta)
@@ -137,17 +140,6 @@ def _custom_meta() -> TemplateMeta:
         variables=[],
     )
 
-
-def _prepare_css_custom(static_dir: Path) -> dict[str, str]:
-    """Assemble CSS for custom documents (no template CSS)."""
-    brand = load_brand()
-    css = load_static_css(static_dir)
-    css["css_tokens"] = _patch_brand_colors(css["css_tokens"], brand)
-    logo_uri = inline_logo(static_dir, brand.logo_path)
-    css["css_base"] = _patch_watermark(css["css_base"], logo_uri)
-    css["css_template"] = ""
-    css["logo_uri"] = logo_uri
-    return css
 
 
 def _render_template(

@@ -1,0 +1,65 @@
+id: custom
+name: 커스텀
+description: 자유 형식 문서. get_section_pool_tool로 섹션을 조합해 구성합니다.
+author: 식스티헤르츠
+version: "1.0"
+keywords:
+  - 커스텀
+  - 자유형식
+  - 제안서
+  - 기획서
+  - 분석
+sections: []
+variables:
+  - name: title
+    type: string
+    required: true
+  - name: authors
+    type: string
+    required: true
+  - name: date
+    type: string
+    required: true
+  - name: classification
+    type: string
+    default: 내부용
+guide_notes: |
+  ## 커스텀 문서 마크다운 작성 가이드
+
+  ### frontmatter
+  title, authors, date, classification, template_id 를 기입합니다.
+  template_id는 반드시 `custom` 으로 지정합니다.
+  classification 기본값은 내부용입니다.
+
+  ### 섹션 구조
+  `##` 헤딩 = 섹션(한 페이지 단위), `###` = 서브섹션.
+  #### 이상은 렌더링되지 않습니다.
+  섹션 수는 3~7개를 권장합니다. 첫 섹션은 표지 역할, 마지막은 결론/기대효과 류로 구성합니다.
+
+  ### 리스트 항목
+  구분자는 반드시 `: ` 를 사용합니다. ` — ` 는 금지입니다.
+  (CSS가 자동으로 앞에 '—' 마커를 추가합니다.)
+
+  ### 인용 블록 (작성자 인사이트 전용)
+  `>` 인용 블록은 작성자의 판단·해석·결론만 기술합니다.
+  수치나 사실 나열에는 사용하지 않습니다.
+
+  > 이렇게 중요한 인사이트를 강조 박스로 표시합니다.
+
+  ### 칼아웃 블록 (경고/위험 강조)
+  색상이 다른 강조 박스가 필요할 때 사용합니다.
+
+  경고 (주황):
+  > [!warning] 주의가 필요한 사항을 기술합니다.
+
+  위험 (빨강):
+  > [!danger] 즉각 조치가 필요한 심각한 사항을 기술합니다.
+
+  칼아웃은 한 줄만 지원합니다. 여러 줄이 필요하면 별도 칼아웃을 사용하세요.
+
+  ### 표
+  마크다운 파이프 테이블을 사용합니다. 첫 번째 열은 자동으로 라벨 스타일(볼드, 중앙정렬)이 적용됩니다.
+
+  ### 섹션 구성 참고
+  get_section_pool_tool 을 호출하면 기존 템플릿의 섹션 풀을 조회할 수 있습니다.
+  풀에서 필요한 섹션을 골라 조합하거나, 완전히 새로운 섹션을 자유롭게 추가할 수 있습니다.
