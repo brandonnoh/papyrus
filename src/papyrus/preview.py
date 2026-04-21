@@ -332,8 +332,9 @@ _PREVIEW_JS = """<script>
         var pgTop = currentPage.getBoundingClientRect().top;
         var liveRemain = (pgTop + marginPx + availH) - (function() {
           var lastBottom = pgTop + marginPx + hdrH;
-          currentPage.querySelectorAll('section').forEach(function(s) {
-            var b = s.getBoundingClientRect().bottom;
+          currentPage.querySelectorAll('section > *').forEach(function(el) {
+            var b = el.getBoundingClientRect().bottom
+              + parseFloat(window.getComputedStyle(el).marginBottom || '0');
             if (b > lastBottom) lastBottom = b;
           });
           return lastBottom;
