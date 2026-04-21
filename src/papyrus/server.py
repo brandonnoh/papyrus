@@ -272,94 +272,164 @@ def _setup_instructions() -> list[str]:
 def start_report() -> str:
     """보고서 작성 또는 브랜딩 설정 시작점."""
     templates = discover_templates(TEMPLATES_DIR)
-    lines = [
-        "사용자가 Papyrus를 호출했습니다.",
-        "",
-        "**사용자 의도를 먼저 파악하세요:**",
-        "- '설정' / '세팅' / 'setup' 언급 → 아래 '브랜딩 설정' 섹션을 따르세요.",
-        "- 그 외 → 아래 '보고서 작성' 섹션을 따르세요.",
-        "",
-        "---",
-        "",
-        "## 보고서 작성 진행 순서",
-        "1. **문서 등급 확인** — 아래 옵션 중 하나를 선택하도록 먼저 물어봅니다:",
-        "   - 대외비 (외부 공개 불가, 기밀)",
-        "   - 내부용 (사내 열람용)",
-        "   - 외부용 (고객·파트너 공유 가능)",
-        "   선택된 등급은 YAML frontmatter `classification:` 필드와 페이지 머릿말에 사용됩니다.",
-        "2. 사용자의 요청 의도와 아래 템플릿의 keywords를 비교하여 유사도순 정렬",
-        "3. 가장 적합한 템플릿에 -> 화살표로 강조",
-        "4. 맨 아래에 '커스텀 -- 자유 형식' 옵션 항상 포함",
-        "5. 사용자 확인 후 get_template_guide -> 마크다운 작성 -> generate_report",
-        "",
-        "## 보유 템플릿",
-    ]
+
+    template_opts = []
     for t in templates:
-        kw = ", ".join(t.keywords) if t.keywords else ""
-        lines.append(f"- **{t.name}** (`{t.id}`) -- {t.description}")
-        if kw:
-            lines.append(f"  키워드: {kw}")
-    lines.append("- **커스텀** -- 자유 형식으로 직접 구성")
-    lines.extend([
-        "",
-        "## 커스텀 문서 진행 시",
-        "",
-        "사용자가 커스텀을 선택하거나 보유 템플릿이 맞지 않을 때:",
-        "1. 사용자 의도 파악",
-        "2. get_section_pool()로 기존 섹션 풀 조회",
-        "3. 섹션 조합 규칙:",
-        "   - 첫 섹션: 항상 표지",
-        "   - 마지막: 결론/기대효과 류",
-        "   - 중간: 풀에서 매칭도 높은 것 우선",
-        "   - 총 섹션 수: 3~7개",
-        "   - 스타일: h2, h3, p, table, ul, ol, "
-        ".key-message, figure 등 base.css만 사용",
-        "4. 구조 제안 -> 사용자 컨펌 -> 마크다운 작성 "
-        "-> generate_report(template_id=\"custom\")",
-        "",
-        "## 마크다운 작성 규칙",
-        "### 제목 계층 구조",
-        "- ## : 메인 섹션 제목 (필수, 각 섹션이 한 페이지)",
-        "- ### : 서브섹션 제목 (선택, 한 섹션 안에서 2~4개 소주제로 나눌 때)",
-        "  서브섹션 사용 예: 비교 분석, 케이스별 설명, 단계별 구분",
-        "- #### 이상: 사용 금지 (렌더링에서 무시됨)",
-        "",
-        "- 리스트 항목(- )은 CSS가 자동으로 '—' 를 붙입니다.",
-        "  항목명과 설명을 구분할 때는 '—' 대신 ': ' 를 사용하세요.",
-        "  올바른 예: `- parser.py: YAML frontmatter + Markdown 파싱`",
-        "  잘못된 예: `- parser.py — YAML frontmatter + Markdown 파싱`",
-        "",
-        "- 인용 블록( > )은 **작성자의 인사이트·판단·시사점**을 담는 영역입니다.",
-        "  단순 사실 요약이나 본문 반복은 금지합니다.",
-        "  섹션에서 가장 중요한 한 가지 결론 또는 작성자의 관점을 1~2문장으로 작성하세요.",
-        "  올바른 예: `> 보통참여 수준의 리소스로 적극참여의 성과를 낼 수 있는 구조입니다.`",
-        "  잘못된 예: `> 총 56개 테스트가 모두 통과되었습니다.` (사실 나열 — 인사이트 아님)",
-        "",
-        "- 칼아웃 블록( > [!warning] / > [!danger] )은 **경고·위험 사항 전용** 강조 박스입니다.",
-        "  주황 경고: `> [!warning] 주의가 필요한 내용`",
-        "  빨강 위험: `> [!danger] 즉각 조치가 필요한 내용`",
-        "  칼아웃은 한 줄만 지원합니다. 여러 줄이 필요하면 칼아웃을 각각 따로 씁니다.",
-        "  인사이트용 `>` 와 혼동 금지 — 칼아웃은 [!TYPE] 태그가 있을 때만 색상이 바뀝니다.",
-        "",
-        "## 각주 사용법",
-        "- 인라인 참조: `[^id]` 형태로 본문에 삽입 (예: `시장 점유율 35%[^src1]`)",
-        "- 각주 정의: `[^id]: 내용` 을 해당 섹션 끝에 작성",
-        "- 출처 표기, 보충 설명 모두 가능",
-        "- 각주는 자동으로 문서 마지막 \"참고문헌\" 페이지에 모아 표시됨",
-        "",
-        "## generate_report_tool 호출 시 필수 사항",
-        "- **output_dir는 현재 작업 디렉토리(cwd) 절대경로를 전달하세요.**",
-        "  Claude Code 환경에서는 세션의 primary working directory가 프로젝트 루트입니다.",
-        "  모를 경우 사용자에게 'pwd 결과를 알려주세요'라고 요청하세요.",
-        "- get_report_source, list_reports 호출 시에도 동일한 output_dir 전달.",
-        "",
-        "## 절대 하지 않을 것",
-        "- 절대 스타일(tokens.css + base.css) 오버라이드",
-        "- 사용자에게 CSS/스타일 커스터마이징 옵션 제공",
-        "- output_dir 없이 generate_report_tool 호출",
-    ])
-    lines += ["", "---", ""] + _setup_instructions()
-    return "\n".join(lines)
+        template_opts.append(
+            f'    {{"label": "{t.name}", "description": "{t.description}"}}'
+        )
+    template_opts.append(
+        '    {"label": "커스텀", "description": "자유 형식으로 직접 섹션 구성"}'
+    )
+    template_opts_str = ",\n".join(template_opts)
+
+    setup_lines = _setup_instructions()
+    setup_block = "\n".join(setup_lines)
+
+    return f"""사용자가 Papyrus를 호출했습니다.
+
+## 의도 분기
+
+사용자 메시지에 '설정' / '세팅' / 'setup' / '브랜딩' 이 포함되어 있으면:
+→ 아래 "브랜딩 설정 wizard" 섹션을 따르세요.
+
+그 외 모든 경우 (보고서 작성):
+→ 즉시 아래 "보고서 wizard"를 실행하세요.
+
+---
+
+## 보고서 wizard
+
+**첫 번째 행동으로 반드시 AskUserQuestion 도구를 아래 파라미터로 호출하세요.**
+설명하거나 안내 텍스트를 먼저 출력하지 마세요. 도구 호출이 첫 행동입니다.
+
+```
+AskUserQuestion(
+  questions=[
+    {{
+      "question": "문서 등급을 선택하세요.",
+      "header": "문서 등급",
+      "multiSelect": false,
+      "options": [
+        {{"label": "대외비", "description": "외부 공개 불가 — 기밀 문서"}},
+        {{"label": "내부용", "description": "사내 열람용 — 팀·조직 공유"}},
+        {{"label": "외부용", "description": "고객·파트너 공유 가능"}}
+      ]
+    }},
+    {{
+      "question": "보고서 유형을 선택하세요.",
+      "header": "템플릿",
+      "multiSelect": false,
+      "options": [
+{template_opts_str}
+      ]
+    }},
+    {{
+      "question": "사용할 구성 요소를 선택하세요. (복수 선택 가능)",
+      "header": "구성 요소",
+      "multiSelect": true,
+      "options": [
+        {{"label": "칼아웃", "description": "> [!warning] / > [!danger] — 경고·위험 강조 박스"}},
+        {{"label": "각주", "description": "[^id] — 출처·보충 설명, 마지막 페이지 참고문헌 자동 생성"}},
+        {{"label": "표", "description": "파이프 테이블 — 데이터 비교·정리"}},
+        {{"label": "이미지", "description": "![alt](path) — 시각 자료 삽입"}}
+      ]
+    }}
+  ]
+)
+```
+
+AskUserQuestion 응답을 받은 후:
+1. 등급 → frontmatter `classification:` 값으로 저장
+2. 템플릿 → `get_template_guide_tool(template_id)` 호출
+3. 선택된 구성 요소만 마크다운에 포함 (아래 "구성 요소별 작성 지침" 참조)
+4. 마크다운 작성
+5. `generate_report_tool(markdown_content, template_id, output_dir=<cwd>)` 호출
+
+커스텀 선택 시: `get_section_pool_tool()` 호출 후 섹션 조합 제안 → 사용자 확인 → 마크다운 작성
+
+---
+
+## 구성 요소별 작성 지침
+
+선택한 요소만 사용하세요. 선택하지 않은 요소는 마크다운에 포함하지 마세요.
+
+**칼아웃 선택 시:**
+- 경고(주황): `> [!warning] 주의가 필요한 내용`
+- 위험(빨강): `> [!danger] 즉각 조치가 필요한 내용`
+- 한 줄만 지원 — 여러 줄이면 칼아웃을 각각 따로 작성
+
+**각주 선택 시:**
+- 인라인 참조: `시장 점유율 35%[^src1]`
+- 섹션 끝 정의: `[^src1]: 출처 내용`
+- 모든 각주는 자동으로 마지막 "참고문헌" 페이지에 모임
+
+**표 선택 시:**
+- 파이프 테이블로 비교·수치 데이터 표현
+- 첫 번째 열은 자동으로 라벨 스타일(볼드, 중앙정렬) 적용
+
+**이미지 선택 시:**
+- `![설명](경로)` 형태로 삽입, figure/figcaption 자동 적용
+- 경로를 모르면 사용자에게 요청
+
+---
+
+## 마크다운 공통 규칙
+
+- `##` = 섹션 (한 페이지 단위), `###` = 서브섹션 (선택, 2~4개), `####` 이상 금지
+- 리스트 구분자: `: ` 사용, ` — ` 금지 (CSS가 자동으로 '—' 추가)
+- `>` 인용 블록: 작성자 인사이트·판단·시사점 전용, 사실 나열 금지
+
+## generate_report_tool 필수 사항
+
+- `output_dir`: 현재 작업 디렉토리(cwd) 절대경로 필수
+- 모를 경우 사용자에게 `pwd` 결과를 요청
+- `get_report_source`, `list_reports` 호출 시에도 동일한 `output_dir` 전달
+
+## 절대 하지 않을 것
+
+- tokens.css / base.css 스타일 오버라이드
+- CSS 커스터마이징 옵션 제공
+- output_dir 없이 generate_report_tool 호출
+- 선택하지 않은 구성 요소 사용
+
+---
+
+## 브랜딩 설정 wizard
+
+**첫 번째 행동으로 AskUserQuestion 도구를 호출하세요:**
+
+```
+AskUserQuestion(
+  questions=[
+    {{
+      "question": "브랜드 주색상을 변경하시겠습니까?",
+      "header": "브랜드 색상",
+      "multiSelect": false,
+      "options": [
+        {{"label": "기본값 유지", "description": "#09356E (네이비)"}},
+        {{"label": "직접 입력", "description": "hex 코드를 입력합니다"}}
+      ]
+    }},
+    {{
+      "question": "로고 이미지를 설정하시겠습니까?",
+      "header": "로고",
+      "multiSelect": false,
+      "options": [
+        {{"label": "설정 안 함", "description": "로고 없이 진행"}},
+        {{"label": "경로 입력", "description": "PNG 파일 절대경로를 입력합니다"}}
+      ]
+    }}
+  ]
+)
+```
+
+응답 수집 후 `get_config_status()` 호출하여 현재 설정 확인,
+변경할 항목만 MCP settings.json env 블록으로 안내.
+
+---
+
+{setup_block}"""
 
 
 def main():
