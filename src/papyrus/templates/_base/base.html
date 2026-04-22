@@ -86,6 +86,77 @@
     return entries;
   }
 
+  function measureInHiddenPage(el) {
+    var wrap = document.createElement('div');
+    wrap.className = 'page page--body';
+    wrap.style.cssText = 'visibility:hidden;position:absolute;top:0;left:-9999px';
+    var sec = document.createElement('section');
+    sec.className = 'doc-section';
+    wrap.appendChild(sec);
+    sec.appendChild(el);
+    document.body.appendChild(wrap);
+    var h = el.getBoundingClientRect().height;
+    document.body.removeChild(wrap);
+    return h;
+  }
+
+  function splitTableIntoChunks(table, targetH) {
+    var thead = table.querySelector('thead');
+    var tbody = table.querySelector('tbody');
+    if (!tbody) return null;
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length <= 1) return null;
+    var theadH = thead ? thead.getBoundingClientRect().height : 0;
+    var usable = targetH - theadH;
+    if (usable <= 0) return null;
+
+    var chunks = [];
+    var cur = [];
+    var curH = 0;
+    rows.forEach(function (row) {
+      var rh = row.getBoundingClientRect().height;
+      if (rh <= 0) return;
+      if (curH + rh > usable && cur.length > 0) {
+        chunks.push(cur);
+        cur = [];
+        curH = 0;
+      }
+      cur.push(row);
+      curH += rh;
+    });
+    if (cur.length > 0) chunks.push(cur);
+    if (chunks.length <= 1) return null;
+
+    return chunks.map(function (rowGroup) {
+      var t = table.cloneNode(false);
+      if (thead) t.appendChild(thead.cloneNode(true));
+      var tb = document.createElement('tbody');
+      rowGroup.forEach(function (row) { tb.appendChild(row.cloneNode(true)); });
+      t.appendChild(tb);
+      return t;
+    });
+  }
+
+  function expandEntries(entries, heights, availH) {
+    var exEntries = [];
+    var exHeights = [];
+    entries.forEach(function (e, i) {
+      if (e.el.tagName === 'TABLE' && heights[i] > availH) {
+        var chunks = splitTableIntoChunks(e.el, availH);
+        if (chunks) {
+          chunks.forEach(function (chunkTable, ci) {
+            exEntries.push({ el: chunkTable, isFirst: ci === 0 ? e.isFirst : false });
+            exHeights.push(measureInHiddenPage(chunkTable));
+          });
+          return;
+        }
+      }
+      exEntries.push(e);
+      exHeights.push(heights[i]);
+    });
+    return { entries: exEntries, heights: exHeights };
+  }
+
   function tableMinHeight(table, fallback) {
     var thead = table.querySelector('thead');
     var firstRow = table.querySelector('tbody > tr');
@@ -148,6 +219,19 @@
     });
   }
 
+  function updatePageNumbers() {
+    var pages = Array.from(document.querySelectorAll('.page--body'));
+    var total = pages.length;
+    pages.forEach(function (page, i) {
+      var old = page.querySelector('.page-num');
+      if (old) old.remove();
+      var el = document.createElement('div');
+      el.className = 'page-num';
+      el.textContent = (i + 1) + ' / ' + total;
+      page.appendChild(el);
+    });
+  }
+
   function run() {
     // preview.py가 주입한 preview-toolbar가 있으면 해당 시스템에 위임
     if (document.querySelector('.preview-toolbar')) return;
@@ -166,8 +250,11 @@
       return blockHeight(e.el, entries[i + 1] ? entries[i + 1].el : null);
     });
 
+    var ex = expandEntries(entries, heights, availH);
+
     firstPage.querySelectorAll('.doc-section').forEach(function (s) { s.remove(); });
-    distributeBlocks(firstPage, cls, entries, heights, availH);
+    distributeBlocks(firstPage, cls, ex.entries, ex.heights, availH);
+    updatePageNumbers();
   }
 
   function scheduleRun() {

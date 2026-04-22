@@ -75,7 +75,7 @@ def prepare_css(
     css = load_static_css(static_dir)
     css["css_tokens"] = _patch_brand_colors(css["css_tokens"], brand)
     logo_uri = inline_logo(static_dir, brand.logo_path)
-    css["css_base"] = _patch_watermark(css["css_base"], logo_uri)
+    css["css_tokens"] = _patch_watermark(css["css_tokens"], logo_uri)
     css["css_template"] = _read_text(template_meta.path / "style.css")
     css["logo_uri"] = logo_uri
     return css
@@ -230,10 +230,9 @@ def _patch_brand_colors(css: str, brand: BrandConfig) -> str:
 
 
 def _patch_watermark(css_tokens: str, logo_uri: str) -> str:
-    """Replace the watermark background URL with logo data URI."""
     if not logo_uri:
         return css_tokens
     return css_tokens.replace(
-        "url('logo.png')",
-        f"url('{logo_uri}')",
+        "--watermark-url: none",
+        f"--watermark-url: url('{logo_uri}')",
     )

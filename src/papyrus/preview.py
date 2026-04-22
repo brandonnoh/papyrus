@@ -20,7 +20,6 @@ _PREVIEW_CSS = """<style>
     padding: 0 !important;
     min-height: 0 !important;
   }
-  .page--body::after { display: none !important; }
   .preview-page {
     width: var(--page-width);
     min-height: var(--page-height);
@@ -30,6 +29,19 @@ _PREVIEW_CSS = """<style>
     box-shadow: var(--shadow-page);
     box-sizing: border-box;
     position: relative;
+    overflow: hidden;
+  }
+  .preview-page::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--watermark-width);
+    height: var(--watermark-height);
+    transform: translate(-50%, -50%) rotate(var(--watermark-rotation));
+    background: var(--watermark-url) no-repeat center / contain;
+    opacity: var(--watermark-opacity);
+    pointer-events: none;
   }
   [contenteditable]:hover { outline: 1px dashed #b0c4de; border-radius: 2px; }
   [contenteditable]:focus { outline: 2px solid #09356E; border-radius: 2px; }
@@ -51,6 +63,11 @@ _PREVIEW_CSS = """<style>
     cursor: pointer; font: inherit; padding: 0;
   }
   .preview-toolbar button:hover { opacity: 0.75; }
+  .print-hint {
+    font-size: 10px; opacity: 0.6;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 10px;
+  }
   .save-toast {
     position: fixed; bottom: 24px; right: 24px;
     background: #09356E; color: #fff;
@@ -71,12 +88,43 @@ _PREVIEW_CSS = """<style>
   }
 }
 @media print {
-  .preview-toolbar, .save-toast, .preview-page-num, [data-papyrus-clone] { display: none !important; }
-  @page { margin: var(--page-margin); }
-  .page { padding: 0 !important; }
-  .preview-page { display: contents; }
-  .page--body { min-height: 0 !important; }
+  .preview-toolbar, .save-toast, [data-papyrus-clone] { display: none !important; }
+  @page { margin: 0; }
+  .page--body { min-height: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+  .page--body::after { display: none !important; }
   .page--cover { height: 100vh !important; }
+  .preview-page {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+    margin: 0;
+    padding: var(--page-margin);
+    box-sizing: border-box;
+  }
+  .preview-page:last-child { break-after: auto; page-break-after: auto; }
+  .preview-page-num {
+    position: absolute;
+    bottom: 5mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: var(--size-page-num);
+    color: var(--color-text-page-meta);
+  }
+  .preview-page::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--watermark-width);
+    height: var(--watermark-height);
+    transform: translate(-50%, -50%) rotate(var(--watermark-rotation));
+    background: var(--watermark-url) no-repeat center / contain;
+    opacity: var(--watermark-opacity);
+    pointer-events: none;
+  }
 }
 </style>"""
 
@@ -89,7 +137,8 @@ _PREVIEW_JS = """<script>
   toolbar.className = 'preview-toolbar';
   toolbar.innerHTML = '<span class="dirty-indicator"></span><span>편집 모드</span>'
     + '<button onclick="window.__papyrusSave()">저장 (⌘S)</button>'
-    + '<button onclick="window.print()">인쇄</button>';
+    + '<button onclick="window.print()">인쇄</button>'
+    + '<span class="print-hint">인쇄 여백: 없음</span>';
 
   var toast = document.createElement('div');
   toast.className = 'save-toast';

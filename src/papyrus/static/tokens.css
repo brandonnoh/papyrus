@@ -91,10 +91,11 @@
   --color-key-message-danger-border: #EF4444;
 
   /* ===== 워터마크 ===== */
-  --watermark-opacity: 0.04;
+  --watermark-url: none;
+  --watermark-opacity: 0.08;
   --watermark-rotation: -30deg;
-  --watermark-width: 160mm;
-  --watermark-height: 50mm;
+  --watermark-width: 140mm;
+  --watermark-height: 140mm;
 
   /* ===== 컴포넌트 — 보더 두께 ===== */
   --border-h2-left: 5px;

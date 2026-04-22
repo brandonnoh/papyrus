@@ -40,6 +40,7 @@ body {
 .page--cover {
   height: var(--page-height);
   overflow: hidden;
+  position: relative;
 }
 
 .page--body {
@@ -56,7 +57,7 @@ body {
   width: var(--watermark-width);
   height: var(--watermark-height);
   transform: translate(-50%, -50%) rotate(var(--watermark-rotation));
-  background: url('logo.png') no-repeat center / contain;
+  background: var(--watermark-url) no-repeat center / contain;
   opacity: var(--watermark-opacity);
   pointer-events: none;
 }
@@ -65,12 +66,11 @@ body {
   body {
     background: var(--color-bg-page);
   }
-  @page { margin: var(--page-margin); }
+  @page { margin: 0; }
   .page {
     margin: 0;
     box-shadow: none;
     width: 100%;
-    padding: 0;
   }
   .page--cover {
     height: 100vh;
@@ -91,17 +91,18 @@ body {
   h2, h3 {
     break-after: avoid;
   }
-  table, .key-message, figure, pre {
+  .key-message, figure, pre {
     break-inside: avoid;
   }
-  @page {
-    @bottom-center {
-      content: counter(page) " / " counter(pages);
-      font-size: 8pt;
-      color: #999;
-    }
+  /* table은 break-inside 강제 금지 해제 — 행이 많으면 자연 분할, thead가 각 페이지 반복 */
+  table {
+    break-inside: auto;
+  }
+  thead {
+    display: table-header-group;
   }
 }
+
 
 /* ----------------------------------------------------------
    2. 표지 (cover)
@@ -131,9 +132,9 @@ body {
 }
 
 .cover-logo img {
-  height: 10mm;
+  height: 28mm;
   width: auto;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .cover h1 {
@@ -501,6 +502,17 @@ a.footnote-ref::after {
 .doc-section + .doc-section {
   margin-top: 10mm;
   padding-top: 8mm;
+}
+
+.page-num {
+  position: absolute;
+  bottom: calc(var(--page-margin) / 3);
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--size-page-num);
+  color: var(--color-text-page-meta);
 }
 
 .print-btn {
