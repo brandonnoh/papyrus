@@ -86,8 +86,8 @@ def prepare_css(
 # ---------------------------------------------------------------------------
 
 def build_pages(report_data: ReportData) -> list[dict]:
-    """Cover page entry only; body sections rendered via sections variable."""
-    return [{"is_cover": True}]
+    """Returns page metadata. All content rendered via sections variable."""
+    return []
 
 
 # ---------------------------------------------------------------------------

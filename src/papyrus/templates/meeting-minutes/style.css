@@ -1,78 +1,9 @@
 /* ============================================================
    Template-specific Styles — meeting-minutes
-   base.css에 없는, 이 템플릿 고유의 스타일만 정의합니다.
-   모든 색상/크기는 tokens.css 변수를 참조합니다.
    ============================================================ */
 
 /* ----------------------------------------------------------
-   1. 표지 — 회의록 전용 레이아웃
-      page--cover (flex center) 가 이 요소를 중앙 정렬함.
-      executive-summary의 .cover { margin-bottom: 35mm }와 동일 구조.
-   ---------------------------------------------------------- */
-
-.meeting-cover {
-  width: 100%;
-  text-align: center;
-  padding: 8mm 0 10mm;
-  margin-bottom: 60mm;
-  border-top: var(--border-cover-top) solid var(--color-primary);
-  border-bottom: var(--border-cover-bottom) solid var(--color-primary);
-}
-
-/* "회 의 록" — primary색, 자간 */
-.meeting-label {
-  font-family: var(--font-heading);
-  font-size: var(--size-h3);
-  font-weight: var(--weight-h3);
-  color: var(--color-primary);
-  letter-spacing: 14px;
-  text-transform: uppercase;
-  margin-bottom: 5mm;
-}
-
-/* 타이틀 — 기본 h1 토큰 그대로, 하단 간격만 조정 */
-.meeting-cover h1 {
-  margin: 0 0 7mm;
-}
-
-/* 메타 영역 구분선 */
-.meeting-cover-divider {
-  width: 30mm;
-  height: 1px;
-  background: var(--color-border-light);
-  margin: 0 auto 6mm;
-}
-
-/* 메타 테이블 — 좌우 키-값 2열, 보더 없음 */
-.cover-meta-table {
-  width: auto;
-  border-collapse: collapse;
-  margin: 0 auto;
-}
-
-.cover-meta-table td {
-  padding: 2.5pt 12pt 2.5pt 6pt;
-  font-family: var(--font-heading);
-  font-size: var(--size-meta);
-  border: none;
-  background: none;
-  text-align: left;
-  font-weight: var(--weight-body);
-  white-space: nowrap;
-  vertical-align: middle;
-}
-
-.cover-meta-table td:first-child {
-  color: var(--color-text-secondary);
-  font-weight: var(--weight-h3);
-  text-align: right;
-  background: none;
-  min-width: 44pt;
-  padding-right: 10pt;
-}
-
-/* ----------------------------------------------------------
-   2. 액션 아이템 테이블 — 4열 구성 강조
+   1. 액션 아이템 테이블 — 상태 열 중앙 정렬
    ---------------------------------------------------------- */
 
 .action-table th:last-child,

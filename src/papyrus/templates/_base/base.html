@@ -12,23 +12,16 @@
 <body>
 <button class="print-btn no-print" onclick="window.print()">PDF / 인쇄</button>
 {% block content %}
-<div class="page page--cover">
-  {% block cover %}
-  <div class="cover">
-    <h1>{{ title }}</h1>
-    <div class="meta">{{ authors }} &nbsp;|&nbsp; {{ date }}</div>
-  </div>
-  {% if logo_uri %}
-  <div class="cover-logo">
-    <img src="{{ logo_uri }}" alt="logo">
-  </div>
-  {% endif %}
-  {% endblock cover %}
-</div>
 <div class="page page--body">
   <div class="doc-header">
-    <span>{{ classification }}</span><span>{{ classification }}</span>
+    <span>{{ classification }}</span>
   </div>
+  {% block title_banner %}
+  <div class="doc-title-banner">
+    <h1 class="doc-title-banner__title">{{ title }}</h1>
+    <div class="doc-title-banner__meta">{{ authors }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ date }}</div>
+  </div>
+  {% endblock title_banner %}
   {% for section in sections %}
   <section class="doc-section">
     {% if section.heading %}<h2>{{ section.heading }}</h2>{% endif %}
@@ -58,8 +51,7 @@
     var hdr = document.createElement('div');
     hdr.className = 'doc-header';
     var s1 = document.createElement('span'); s1.textContent = cls;
-    var s2 = document.createElement('span'); s2.textContent = cls;
-    hdr.appendChild(s1); hdr.appendChild(s2);
+    hdr.appendChild(s1);
     div.appendChild(hdr);
     return div;
   }
@@ -185,10 +177,10 @@
     return el.tagName === 'TABLE' ? tableMinHeight(el, heights[j]) : heights[j];
   }
 
-  function distributeBlocks(firstPage, cls, entries, heights, availH) {
+  function distributeBlocks(firstPage, cls, entries, heights, availH, firstPageOffset) {
     var curPage = firstPage;
     var curSec = null;
-    var usedH = 0;
+    var usedH = firstPageOffset || 0;
 
     entries.forEach(function (e, i) {
       var h = heights[i];
@@ -239,9 +231,13 @@
     if (!firstPage) return;
 
     var hdr = firstPage.querySelector('.doc-header');
+    var banner = firstPage.querySelector('.doc-title-banner');
     var cls = clsText(firstPage);
     var hdrH = hdr
       ? hdr.getBoundingClientRect().height + parseFloat(getComputedStyle(hdr).marginBottom)
+      : 0;
+    var bannerH = banner
+      ? banner.getBoundingClientRect().height + parseFloat(getComputedStyle(banner).marginBottom)
       : 0;
     var availH = CONTENT_H_PX - hdrH;
 
@@ -253,7 +249,7 @@
     var ex = expandEntries(entries, heights, availH);
 
     firstPage.querySelectorAll('.doc-section').forEach(function (s) { s.remove(); });
-    distributeBlocks(firstPage, cls, ex.entries, ex.heights, availH);
+    distributeBlocks(firstPage, cls, ex.entries, ex.heights, availH, bannerH);
     updatePageNumbers();
   }
 

@@ -102,6 +102,7 @@ _PREVIEW_CSS = """<style>
     margin: 0;
     padding: var(--page-margin);
     box-sizing: border-box;
+    height: 297mm;
   }
   .preview-page:last-child { break-after: auto; page-break-after: auto; }
   .preview-page-num {

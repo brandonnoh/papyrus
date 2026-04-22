@@ -14,9 +14,6 @@ keywords:
   - 참석자
   - minutes
 sections:
-  - id: cover
-    name: 표지
-    required: true
   - id: 회의 개요
     name: 회의 개요
     required: true

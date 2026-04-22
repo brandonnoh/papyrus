@@ -37,6 +37,9 @@ docs/
 .claude/
 .serena/
 
+# 로고 — 사용자가 PAPYRUS_LOGO 환경변수로 직접 설정
+*.png
+
 # 개발용 (레포 비공개)
 tests/
 src/papyrus/STYLE_AUTHORITY.md

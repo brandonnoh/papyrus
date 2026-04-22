@@ -1,24 +1,33 @@
 id: executive-summary
-name: 대표보고 요약
-description: 경영진/대표 대상 핵심 사안 요약 보고서. A4 2~4페이지.
+name: 요약보고서
+description: 경영진/대표 대상 핵심 사안 요약 보고서. A4 3~5페이지.
 author: 식스티헤르츠
-version: "1.0"
+version: "1.1"
 keywords:
+  - 요약보고서
   - 대표보고
   - 경영진
   - 요약
   - 전략
   - 의사결정
-  - 컨소시엄
   - 검토
   - 제안
 sections:
-  - id: cover
-    name: 표지
+  - id: 배경 및 개요
+    name: 배경 및 개요
     required: true
-  - id: body
-    name: 본문
+  - id: 현황 분석
+    name: 현황 분석
     required: true
+  - id: 핵심 시사점
+    name: 핵심 시사점
+    required: true
+  - id: 결론 및 제언
+    name: 결론 및 제언
+    required: true
+  - id: 첨부
+    name: 첨부
+    required: false
 variables:
   - name: title
     type: string
@@ -33,7 +42,7 @@ variables:
     type: string
     default: 대외비
 guide_notes: |
-  ## 대표보고 마크다운 작성 가이드
+  ## 요약보고서 마크다운 작성 가이드
 
   ### frontmatter
   title, authors, date, classification, template_id 를 기입합니다.
@@ -43,19 +52,31 @@ guide_notes: |
   `##` 헤딩 = 섹션(한 페이지 단위), `###` = 서브섹션.
   #### 이상은 렌더링되지 않습니다.
 
+  필수 섹션 순서:
+  1. 표지 (cover)
+  2. 배경 및 개요 — 왜 이 보고를 하는지, 상황과 맥락
+  3. 현황 분석 — 데이터, 현황, 문제점
+  4. 핵심 시사점 — 분석에서 도출한 판단과 의미
+  5. 결론 및 제언 — 의사결정 요청, 권고안
+  6. 첨부 (선택) — 참고자료, 상세 데이터
+
+  ### 표지 (cover)
+  표지 섹션의 본문은 비워두거나 한 줄 부제목만 기술합니다.
+  title, authors, date는 frontmatter에서 자동 렌더링됩니다.
+
+  ### 현황 분석
+  표로 수치/현황을 기술하고, 서브섹션(###)으로 항목을 나눕니다.
+
+  ### 핵심 시사점
+  인용 블록(>)으로 핵심 판단을 강조합니다.
+
+  > 이렇게 중요한 시사점을 강조 박스로 표시합니다.
+
   ### 리스트 항목
   구분자는 반드시 `: ` 를 사용합니다. ` — ` 는 금지입니다.
   (CSS가 자동으로 앞에 '—' 마커를 추가합니다.)
 
-  ### 인용 블록 (작성자 인사이트 전용)
-  `>` 인용 블록은 작성자의 판단·해석·결론만 기술합니다.
-  수치나 사실 나열에는 사용하지 않습니다.
-
-  > 이렇게 중요한 인사이트를 강조 박스로 표시합니다.
-
   ### 칼아웃 블록 (경고/위험 강조)
-  색상이 다른 강조 박스가 필요할 때 사용합니다.
-
   경고 (주황):
   > [!warning] 주의가 필요한 사항을 기술합니다.
 

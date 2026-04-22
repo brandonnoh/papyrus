@@ -1,19 +1,2 @@
 {% extends "_base/base.html" %}
 {% block extra_style %}{{ css_template }}{% endblock %}
-{% block cover %}
-<div class="meeting-cover">
-  <div class="meeting-label">회 의 록</div>
-  <h1>{{ title }}</h1>
-  <div class="meeting-cover-divider"></div>
-  <table class="cover-meta-table">
-    <tr><td>일 시</td><td>{{ date }}</td></tr>
-    <tr><td>작 성</td><td>{{ authors }}</td></tr>
-    <tr><td>등 급</td><td>{{ classification }}</td></tr>
-  </table>
-</div>
-{% if logo_uri %}
-<div class="cover-logo">
-  <img src="{{ logo_uri }}" alt="logo">
-</div>
-{% endif %}
-{% endblock cover %}

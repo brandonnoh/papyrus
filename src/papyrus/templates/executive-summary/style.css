@@ -8,9 +8,6 @@
    1. 케이스 비교표 (Case Table) — executive-summary 전용
    ---------------------------------------------------------- */
 
-/* 표지 타이틀 위치 — 페이지 상단 1/3 영역 */
-.cover { margin-bottom: 70mm; }
-
 .case-table td:last-child {
   background: var(--color-bg-emphasis);
 }
