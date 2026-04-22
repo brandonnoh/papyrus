@@ -359,6 +359,13 @@ def setup() -> str:
 **첫 번째 행동으로 `get_config_status()`를 호출해 현재 설정값을 확인하세요.**
 확인 후 아래 AskUserQuestion을 호출합니다.
 
+**반드시 아래 5개 질문을 모두 포함해야 합니다 (하나도 생략 금지):**
+1. 브랜드 주색상 (PAPYRUS_COLOR_PRIMARY)
+2. Hover 색상 (PAPYRUS_COLOR_PRIMARY_HOVER)
+3. 로고 (PAPYRUS_LOGO)
+4. 기본 작성자 (PAPYRUS_DEFAULT_AUTHOR)
+5. 저장 경로 (PAPYRUS_OUTPUT_DIR)
+
 ```
 AskUserQuestion(
   questions=[
