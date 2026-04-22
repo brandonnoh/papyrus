@@ -240,38 +240,9 @@ def list_reports(output_dir: str = "") -> list[dict]:
     return reports
 
 
-def _setup_instructions() -> list[str]:
-    """setup 안내 텍스트 블록 (start_report 프롬프트 내에서 참조)."""
-    return [
-        "## 브랜딩 설정 (사용자가 설정을 요청한 경우)",
-        "get_config_status()를 호출해 현재 상태를 확인한 후 아래 항목을 순서대로 질문합니다.",
-        "",
-        "① **로고 경로** (PAPYRUS_LOGO): 절대경로 PNG. 없으면 생략.",
-        "② **브랜드 색상** (PAPYRUS_COLOR_PRIMARY): hex 코드. 기본값 #09356E.",
-        "③ **Hover 색상** (PAPYRUS_COLOR_PRIMARY_HOVER): hex 코드. 기본값 #062845.",
-        "④ **기본 작성자** (PAPYRUS_DEFAULT_AUTHOR): 없으면 생략.",
-        "⑤ **저장 경로** (PAPYRUS_OUTPUT_DIR): 기본값 ~/papyrus-reports.",
-        "",
-        "답변 완료 후 아래 형식으로 MCP 설정 JSON을 생성합니다 (빈 값 제외):",
-        "```json",
-        "{",
-        '  "mcpServers": {',
-        '    "papyrus": {',
-        '      "command": "uvx",',
-        '      "args": ["--from", "git+https://github.com/brandonnoh/papyrus.git", "papyrus"],',
-        '      "env": { "PAPYRUS_LOGO": "...", "..." : "..." }',
-        "    }",
-        "  }",
-        "}",
-        "```",
-        "적용 위치: 이 프로젝트만 → .claude/settings.json / 전체 → ~/.claude/settings.json",
-        "설정 후 Claude 재시작 필요.",
-    ]
-
-
 @mcp.prompt()
 def start_report() -> str:
-    """보고서 작성 또는 브랜딩 설정 시작점."""
+    """보고서 작성 시작점."""
     templates = discover_templates(TEMPLATES_DIR)
 
     template_opts = []
@@ -284,22 +255,7 @@ def start_report() -> str:
     )
     template_opts_str = ",\n".join(template_opts)
 
-    setup_lines = _setup_instructions()
-    setup_block = "\n".join(setup_lines)
-
-    return f"""사용자가 Papyrus를 호출했습니다.
-
-## 의도 분기
-
-사용자 메시지에 '설정' / '세팅' / 'setup' / '브랜딩' 이 포함되어 있으면:
-→ 아래 "브랜딩 설정 wizard" 섹션을 따르세요.
-
-그 외 모든 경우 (보고서 작성):
-→ 즉시 아래 "보고서 wizard"를 실행하세요.
-
----
-
-## 보고서 wizard
+    return f"""사용자가 Papyrus 보고서 작성을 시작합니다.
 
 **첫 번째 행동으로 반드시 AskUserQuestion 도구를 아래 파라미터로 호출하세요.**
 설명하거나 안내 텍스트를 먼저 출력하지 마세요. 도구 호출이 첫 행동입니다.
@@ -392,45 +348,91 @@ AskUserQuestion 응답을 받은 후:
 - tokens.css / base.css 스타일 오버라이드
 - CSS 커스터마이징 옵션 제공
 - output_dir 없이 generate_report_tool 호출
-- 선택하지 않은 구성 요소 사용
+- 선택하지 않은 구성 요소 사용"""
 
----
 
-## 브랜딩 설정 wizard
+@mcp.prompt()
+def setup() -> str:
+    """Papyrus 환경변수(브랜딩·경로·작성자) 설정 wizard."""
+    return """사용자가 Papyrus 환경변수 설정을 시작합니다.
 
-**첫 번째 행동으로 AskUserQuestion 도구를 호출하세요:**
+**첫 번째 행동으로 `get_config_status()`를 호출해 현재 설정값을 확인하세요.**
+확인 후 아래 AskUserQuestion을 호출합니다.
 
 ```
 AskUserQuestion(
   questions=[
-    {{
-      "question": "브랜드 주색상을 변경하시겠습니까?",
-      "header": "브랜드 색상",
+    {
+      "question": "브랜드 주색상을 설정하세요.",
+      "header": "브랜드 주색상 (PAPYRUS_COLOR_PRIMARY)",
       "multiSelect": false,
       "options": [
-        {{"label": "기본값 유지", "description": "#09356E (네이비)"}},
-        {{"label": "직접 입력", "description": "hex 코드를 입력합니다"}}
+        {"label": "기본값 유지", "description": "#09356E (네이비)"},
+        {"label": "직접 입력", "description": "hex 코드를 입력합니다"}
       ]
-    }},
-    {{
-      "question": "로고 이미지를 설정하시겠습니까?",
-      "header": "로고",
+    },
+    {
+      "question": "Hover 색상을 설정하세요.",
+      "header": "Hover 색상 (PAPYRUS_COLOR_PRIMARY_HOVER)",
       "multiSelect": false,
       "options": [
-        {{"label": "설정 안 함", "description": "로고 없이 진행"}},
-        {{"label": "경로 입력", "description": "PNG 파일 절대경로를 입력합니다"}}
+        {"label": "기본값 유지", "description": "#062845"},
+        {"label": "직접 입력", "description": "hex 코드를 입력합니다"}
       ]
-    }}
+    },
+    {
+      "question": "로고 이미지를 설정하세요.",
+      "header": "로고 (PAPYRUS_LOGO)",
+      "multiSelect": false,
+      "options": [
+        {"label": "설정 안 함", "description": "로고 없이 진행"},
+        {"label": "경로 입력", "description": "PNG 파일 절대경로를 입력합니다"}
+      ]
+    },
+    {
+      "question": "기본 작성자를 설정하세요.",
+      "header": "기본 작성자 (PAPYRUS_DEFAULT_AUTHOR)",
+      "multiSelect": false,
+      "options": [
+        {"label": "설정 안 함", "description": "frontmatter에 직접 입력"},
+        {"label": "직접 입력", "description": "보고서 frontmatter authors 기본값"}
+      ]
+    },
+    {
+      "question": "보고서 저장 경로를 설정하세요.",
+      "header": "저장 경로 (PAPYRUS_OUTPUT_DIR)",
+      "multiSelect": false,
+      "options": [
+        {"label": "기본값 유지", "description": "~/papyrus-reports"},
+        {"label": "직접 입력", "description": "절대경로를 입력합니다"}
+      ]
+    }
   ]
 )
 ```
 
-응답 수집 후 `get_config_status()` 호출하여 현재 설정 확인,
-변경할 항목만 MCP settings.json env 블록으로 안내.
+응답 수집 후:
+- "직접 입력" 선택 항목만 값을 추가로 질문합니다.
+- "기본값 유지" / "설정 안 함" 항목은 env 블록에서 제외합니다.
+- 변경할 항목만 포함한 MCP 설정 JSON을 아래 형식으로 안내합니다:
 
----
+```json
+{
+  "mcpServers": {
+    "papyrus": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/brandonnoh/papyrus.git", "papyrus"],
+      "env": {
+        "PAPYRUS_COLOR_PRIMARY": "#...",
+        "PAPYRUS_LOGO": "/absolute/path/logo.png"
+      }
+    }
+  }
+}
+```
 
-{setup_block}"""
+적용 위치: 이 프로젝트만 → `.claude/settings.json` / 전체 → `~/.claude/settings.json`
+설정 후 Claude 재시작 필요."""
 
 
 def main():
