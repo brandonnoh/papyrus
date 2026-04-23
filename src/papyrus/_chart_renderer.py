@@ -150,15 +150,42 @@ def render_chart_html(table: TableData, palette: list[str]) -> str:
     cid = _chart_id()
     config = builder(table, palette)
     s = _CHART_STYLE_COMMON
-    config_json = json.dumps(config, ensure_ascii=False)
+    # Inject animation.onComplete to pre-render print image (timing-safe)
+    options = config.setdefault("options", {})
+    options["animation"] = {
+        "onComplete": f"__PAPYRUS_ONCOMPLETE_{cid}__",
+    }
+    config_json = json.dumps(config, ensure_ascii=False).replace(
+        f'"__PAPYRUS_ONCOMPLETE_{cid}__"',
+        f'function(){{var pi=document.getElementById("{cid}-print");if(pi)pi.src=ctx.toDataURL("image/png");}}',
+    )
+    data_json = json.dumps(
+        {"headers": table.headers, "rows": table.rows}, ensure_ascii=False
+    )
+    icon = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"'
+        ' viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        '<rect x="3" y="3" width="18" height="18" rx="2"/>'
+        '<line x1="3" y1="9" x2="21" y2="9"/>'
+        '<line x1="3" y1="15" x2="21" y2="15"/>'
+        '<line x1="9" y1="3" x2="9" y2="21"/>'
+        '</svg>'
+    )
     return (
         f'<div class="papyrus-chart-wrap">'
-        f'<canvas id="{cid}" data-chart="true"></canvas></div>\n'
+        f'<canvas id="{cid}" data-chart="true"></canvas>'
+        f'<img id="{cid}-print" class="chart-print-img" alt="차트">'
+        f'<button class="chart-edit-btn no-print"'
+        f' onclick="__papyrusOpenPanel(\'{cid}\')" title="데이터 편집">{icon}</button>'
+        f'</div>\n'
         f"<script>\n(function(){{\n"
         f"  var ctx=document.getElementById('{cid}');\n"
         f"  Chart.defaults.font.family={json.dumps(s['font_family'])};\n"
         f"  Chart.defaults.font.size={s['font_size']};\n"
-        f"  new Chart(ctx,{config_json});\n"
+        f"  var ch=new Chart(ctx,{config_json});\n"
+        f"  (window.__papyrusCharts=window.__papyrusCharts||[])['{cid}']=ch;\n"
+        f"  (window.__papyrusChartData=window.__papyrusChartData||[])['{cid}']={data_json};\n"
         f"}})();\n</script>"
     )
 

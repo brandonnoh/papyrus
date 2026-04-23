@@ -8,6 +8,28 @@
 {{ css_base }}
 .papyrus-chart-wrap{max-height:260px;position:relative}
 .papyrus-chart-wrap canvas{max-height:260px}
+.chart-print-img{display:none;max-width:100%;max-height:260px}
+@media print{
+  canvas[data-chart]{display:none!important}
+  .chart-print-img{display:block!important}
+}
+.chart-edit-btn{position:absolute;top:6px;right:6px;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.92);border:1px solid #ddd;border-radius:4px;padding:4px 5px;cursor:pointer;color:#555;line-height:0;z-index:10}
+.papyrus-chart-wrap:hover .chart-edit-btn{display:flex}
+.chart-panel{position:fixed;right:0;top:0;height:100%;width:300px;background:#fff;border-left:1px solid #e0e0e0;box-shadow:-4px 0 20px rgba(0,0,0,.1);display:none;flex-direction:column;z-index:2000;font-size:13px}
+.chart-panel.open{display:flex}
+.chart-panel__head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eee;font-weight:600;font-size:14px}
+.chart-panel__close{background:none;border:none;cursor:pointer;color:#aaa;font-size:20px;line-height:1;padding:0 2px}
+.chart-panel__close:hover{color:#333}
+.chart-panel__body{flex:1;overflow:auto;padding:12px}
+.chart-panel__tbl{width:100%;border-collapse:collapse}
+.chart-panel__tbl th{background:#f7f7f7;padding:6px 8px;text-align:left;border:1px solid #e4e4e4;font-weight:600;white-space:nowrap;position:sticky;top:0}
+.chart-panel__tbl td{border:1px solid #e4e4e4;padding:0}
+.chart-panel__tbl td input{width:100%;padding:5px 8px;border:none;outline:none;font-size:13px;background:transparent;font-family:inherit;box-sizing:border-box}
+.chart-panel__tbl td input:focus{background:#f0f6ff}
+.chart-panel__foot{padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:flex-end}
+.chart-panel__done{padding:6px 18px;background:var(--color-primary,#09356E);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px}
+.chart-panel__done:hover{opacity:.85}
+@media print{.chart-edit-btn,.chart-panel{display:none!important}}
 {% block extra_style %}{% endblock %}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -272,27 +294,61 @@
   }
 }());
 </script>
+<div class="chart-panel" id="papyrus-chart-panel">
+  <div class="chart-panel__head">
+    <span>데이터 편집</span>
+    <button class="chart-panel__close" onclick="__papyrusClosePanel()" aria-label="닫기">&#x2715;</button>
+  </div>
+  <div class="chart-panel__body">
+    <div id="papyrus-panel-table-wrap"></div>
+  </div>
+  <div class="chart-panel__foot">
+    <button class="chart-panel__done" onclick="__papyrusClosePanel()">완료</button>
+  </div>
+</div>
 <script>
-(function () {
-  var _printPairs = [];
-  window.addEventListener('beforeprint', function () {
-    document.querySelectorAll('canvas[data-chart]').forEach(function (canvas) {
-      var img = document.createElement('img');
-      img.src = canvas.toDataURL('image/png');
-      img.style.maxWidth = '100%';
-      img.style.maxHeight = '260px';
-      canvas.parentNode.insertBefore(img, canvas.nextSibling);
-      canvas.style.display = 'none';
-      _printPairs.push({ img: img, canvas: canvas });
+(function(){
+  function _num(v){var n=parseFloat((v||'0').replace(/,/g,'').replace(/%/g,''));return isNaN(n)?0:n;}
+  function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  window.__papyrusOpenPanel=function(cid){
+    var data=(window.__papyrusChartData||{})[cid];
+    if(!data)return;
+    var wrap=document.getElementById('papyrus-panel-table-wrap');
+    var html='<table class="chart-panel__tbl"><thead><tr>';
+    data.headers.forEach(function(h){html+='<th>'+_esc(h)+'</th>';});
+    html+='</tr></thead><tbody>';
+    data.rows.forEach(function(row,ri){
+      html+='<tr>';
+      row.forEach(function(cell,ci){
+        html+='<td><input type="text" value="'+_esc(cell)+'" data-row="'+ri+'" data-col="'+ci
+          +'" oninput="__papyrusLiveUpdate(\''+cid+'\',this)"></td>';
+      });
+      html+='</tr>';
     });
-  });
-  window.addEventListener('afterprint', function () {
-    _printPairs.forEach(function (pair) {
-      pair.canvas.style.display = '';
-      if (pair.img.parentNode) pair.img.parentNode.removeChild(pair.img);
+    html+='</tbody></table>';
+    wrap.innerHTML=html;
+    document.getElementById('papyrus-chart-panel').classList.add('open');
+  };
+
+  window.__papyrusClosePanel=function(){
+    document.getElementById('papyrus-chart-panel').classList.remove('open');
+  };
+
+  window.__papyrusLiveUpdate=function(cid,input){
+    var data=(window.__papyrusChartData||{})[cid];
+    var chart=(window.__papyrusCharts||{})[cid];
+    if(!data||!chart)return;
+    data.rows[+input.dataset.row][+input.dataset.col]=input.value;
+    chart.data.labels=data.rows.map(function(r){return r[0];});
+    chart.data.datasets.forEach(function(ds,di){
+      ds.data=data.rows.map(function(r){return _num(r[di+1]);});
     });
-    _printPairs = [];
-  });
+    chart.update('none');
+    var canvas=document.getElementById(cid);
+    var pi=document.getElementById(cid+'-print');
+    if(pi&&canvas)pi.src=canvas.toDataURL('image/png');
+  };
 }());
 </script>
 </body>

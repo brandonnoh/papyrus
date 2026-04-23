@@ -117,6 +117,8 @@ def check_image_structure(html: str) -> list[Violation]:
         (m.start(), m.end()) for m in div_ctx.finditer(html)
     ]
     for m in img_pat.finditer(html):
+        if "chart-print-img" in m.group():
+            continue
         pos = m.start()
         inside = any(s <= pos < e for s, e in safe_ranges)
         if not inside:
