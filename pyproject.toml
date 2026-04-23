@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pdf = ["playwright>=1.40"]
+pdf = ["playwright>=1.40", "pillow>=10.0"]
 
 [project.scripts]
 papyrus = "papyrus.server:main"

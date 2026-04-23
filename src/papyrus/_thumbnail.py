@@ -37,24 +37,34 @@ def generate_thumbnail(
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
-            page = browser.new_page(
-                viewport={"width": 1200, "height": 1697},
-            )
+            page = browser.new_page(viewport={"width": 1200, "height": 1697})
             page.goto(url, wait_until="networkidle")
             page.wait_for_function("document.fonts.ready")
+            page.evaluate(
+                "document.querySelectorAll('.preview-toolbar,.no-print')"
+                ".forEach(el => el.style.display='none')"
+            )
 
             target = _find_first_page(page)
             if target:
-                target.screenshot(path=str(thumb_path))
-                _resize_thumb(thumb_path)
+                box = target.bounding_box()
+                if box:
+                    page.screenshot(
+                        path=str(thumb_path),
+                        clip={
+                            "x": box["x"], "y": box["y"],
+                            "width": box["width"], "height": box["height"],
+                        },
+                    )
+                else:
+                    target.screenshot(path=str(thumb_path))
             else:
                 page.screenshot(
                     path=str(thumb_path),
-                    clip={"x": 0, "y": 0,
-                          "width": 1200, "height": 1697},
+                    clip={"x": 0, "y": 0, "width": 1200, "height": 1697},
                 )
-                _resize_thumb(thumb_path)
 
+            _resize_thumb(thumb_path)
             browser.close()
     except Exception:
         _log.exception("thumbnail generation failed")
@@ -79,5 +89,9 @@ def _resize_thumb(path: Path) -> None:
         img = Image.open(path)
         img = img.resize((_THUMB_WIDTH, _THUMB_HEIGHT), Image.LANCZOS)
         img.save(path)
+        return
     except ImportError:
-        pass  # PIL not available -- keep original size
+        pass
+    # PIL 없으면 Playwright 재사용 없이 간단 crop — 비율만 맞춤
+    # (이 경로는 PIL 없을 때만 실행, 크기는 원본 유지)
+    pass
