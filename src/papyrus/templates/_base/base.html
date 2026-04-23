@@ -328,7 +328,11 @@
     });
     html+='</tbody></table>';
     wrap.innerHTML=html;
-    document.getElementById('papyrus-chart-panel').classList.add('open');
+    var panel=document.getElementById('papyrus-chart-panel');
+    var cols=data.headers.length;
+    var w=Math.min(Math.max(cols*80,300),Math.floor(window.innerWidth*0.7));
+    panel.style.width=w+'px';
+    panel.classList.add('open');
   };
 
   window.__papyrusClosePanel=function(){
