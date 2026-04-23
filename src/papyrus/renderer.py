@@ -102,6 +102,7 @@ def render_report(
     *,
     templates_dir: Path | None = None,
     static_dir: Path | None = None,
+    source_dir: Path | None = None,
 ) -> str:
     """Render a ReportData into a full HTML string."""
     templates_dir = templates_dir or _PKG_DIR / _TEMPLATES_DIR_NAME
@@ -129,6 +130,9 @@ def render_report(
     )
     tmpl = env.get_template(tmpl_path)
     html = _render_template(tmpl, report_data, pages, css)
+    if source_dir is not None:
+        from ._image_utils import embed_images
+        html = embed_images(html, source_dir)
     _check_violations(html, report_data.sections, meta)
     return html
 

@@ -98,7 +98,7 @@ def check_inline_styles(html: str) -> list[Violation]:
 
 
 def check_image_structure(html: str) -> list[Violation]:
-    """Detect <img> tags not wrapped in figure or .img-left/.img-right."""
+    """Detect <img> tags not wrapped in figure or .img-layout."""
     violations: list[Violation] = []
     img_pat = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
     figure_ctx = re.compile(
@@ -107,7 +107,7 @@ def check_image_structure(html: str) -> list[Violation]:
     )
     div_ctx = re.compile(
         r"<div[^>]*class\s*=\s*[\"'][^\"']*"
-        r"(?:img-left|img-right)[^\"']*[\"'][^>]*>"
+        r"img-layout[^\"']*[\"'][^>]*>"
         r".*?</div>",
         re.DOTALL | re.IGNORECASE,
     )
@@ -126,7 +126,7 @@ def check_image_structure(html: str) -> list[Violation]:
             violations.append(Violation(
                 rule="image-structure",
                 severity="error",
-                message="<img> not wrapped in <figure> or .img-left/.img-right",
+                message="<img> not wrapped in <figure> or .img-layout",
                 location=f"약 {lineno}번 줄",
             ))
     return violations

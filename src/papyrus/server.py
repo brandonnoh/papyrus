@@ -164,8 +164,8 @@ def generate_report_tool(
     _require_classification(report_data.classification)
     if report_data.template_id:
         template_id = report_data.template_id
-    html = render_report(report_data, template_id)
     out_dir = _resolve_output_dir(output_dir)
+    html = render_report(report_data, template_id, source_dir=out_dir)
     saved = save_report(html, out_dir / output_filename)
     md_path = saved.with_suffix(".md")
     md_path.write_text(markdown_content, encoding="utf-8")
@@ -357,8 +357,23 @@ AskUserQuestion 응답을 받은 후:
 - 첫 번째 열은 자동으로 라벨 스타일(볼드, 중앙정렬) 적용
 
 **이미지 선택 시:**
-- `![설명](경로)` 형태로 삽입, figure/figcaption 자동 적용
-- 경로를 모르면 사용자에게 요청
+- 전체 너비: `![캡션](./path.png)` 또는 `![캡션](https://...)`
+- 좌측 이미지 + 우측 텍스트:
+  ```
+  <!-- img:left -->
+  ![캡션](./path.png)
+  우측에 들어갈 설명 텍스트
+  <!-- /img -->
+  ```
+- 우측 이미지 + 좌측 텍스트:
+  ```
+  <!-- img:right -->
+  ![캡션](./path.png)
+  좌측에 들어갈 설명 텍스트
+  <!-- /img -->
+  ```
+- 로컬 파일(./상대경로, 절대경로)과 URL(https://) 모두 지원
+- 경로를 모르면 사용자에게 파일 경로를 요청
 
 **차트 선택 시:**
 - 표 바로 다음 줄에 주석 한 줄 추가:

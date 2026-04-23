@@ -328,23 +328,48 @@ figcaption {
   text-align: center;
 }
 
-.img-left {
-  float: left;
-  margin: 4pt 12pt 8pt 0;
-  max-width: 45%;
+/* 이미지 — 전체 너비 */
+figure.img-full {
+  margin: 10pt 0 8pt 0;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
-
-.img-right {
-  float: right;
-  margin: 4pt 0 8pt 12pt;
-  max-width: 45%;
-}
-
-.img-inline {
-  display: inline-block;
-  vertical-align: middle;
+figure.img-full img {
   max-width: 100%;
   height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* 이미지 — 2컬럼 Grid 레이아웃 */
+.img-layout {
+  display: grid;
+  gap: 14pt;
+  margin: 10pt 0;
+  align-items: start;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.img-layout--left  { grid-template-columns: 40% 1fr; }
+.img-layout--right { grid-template-columns: 1fr 40%; }
+
+.img-layout__figure {
+  margin: 0;
+  text-align: center;
+}
+.img-layout__figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.img-layout__text > *:first-child { margin-top: 0; }
+.img-layout__text > *:last-child  { margin-bottom: 0; }
+
+@media print {
+  .img-layout     { break-inside: avoid; }
+  figure.img-full { break-inside: avoid; }
 }
 
 /* ----------------------------------------------------------

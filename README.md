@@ -219,6 +219,35 @@ Papyrus는 일반 마크다운과 거의 동일하지만 아래 규칙이 있습
 
 차트 색상은 `PAPYRUS_COLOR_PRIMARY` 기반으로 자동 생성됩니다.
 
+### 이미지
+
+로컬 파일 또는 URL 이미지를 보고서에 삽입합니다.
+
+**전체 너비 (기본)**
+```markdown
+![제품 스크린샷](./assets/screenshot.png)
+![로고](https://example.com/logo.png)
+```
+
+**좌측 이미지 + 우측 텍스트**
+```markdown
+<!-- img:left -->
+![제품 다이어그램](./diagram.png)
+다이어그램 우측에 표시될 설명입니다.
+여러 단락도 지원합니다.
+<!-- /img -->
+```
+
+**우측 이미지 + 좌측 텍스트**
+```markdown
+<!-- img:right -->
+![스크린샷](./screen.png)
+이미지 좌측에 표시될 설명입니다.
+<!-- /img -->
+```
+
+이미지는 base64로 인라인 임베딩되어 PDF 및 인쇄에서도 정상 표시됩니다.
+
 ### frontmatter
 
 모든 보고서는 frontmatter로 시작합니다. `classification`은 필수입니다.
