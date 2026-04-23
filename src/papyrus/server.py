@@ -11,7 +11,7 @@ from .catalog import (
     get_template_guide,
 )
 from .parser import fix_markdown, parse_markdown
-from .preview import open_preview
+from .preview import open_dashboard_in_browser, open_preview
 
 from .renderer import render_report, save_report
 
@@ -170,6 +170,7 @@ def generate_report_tool(
     md_path = saved.with_suffix(".md")
     md_path.write_text(markdown_content, encoding="utf-8")
     _preview_server = open_preview(saved)
+    _try_generate_thumbnail(saved, _preview_server.port)
     url = _preview_server.url
     notices = []
     if saved.name != output_filename:
@@ -238,6 +239,35 @@ def list_reports(output_dir: str = "") -> list[dict]:
             "size_kb": round(html_path.stat().st_size / 1024, 1),
         })
     return reports
+
+
+def _try_generate_thumbnail(html_path, port: int) -> None:
+    """Generate thumbnail in background thread (best-effort)."""
+    import threading
+    from ._thumbnail import generate_thumbnail
+
+    def _run() -> None:
+        try:
+            generate_thumbnail(html_path, port)
+        except Exception:
+            pass  # non-critical -- skip silently
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+@mcp.tool()
+def open_dashboard(output_dir: str = "") -> str:
+    """저장된 보고서 목록을 대시보드로 엽니다.
+
+    Args:
+        output_dir: 보고서 디렉토리. 미지정 시 generate_report_tool과 동일한 fallback.
+
+    Returns:
+        대시보드 URL
+    """
+    out_dir = _resolve_output_dir(output_dir)
+    srv = open_dashboard_in_browser(out_dir)
+    return f"대시보드를 열었습니다: http://127.0.0.1:{srv.port}/dashboard"
 
 
 @mcp.prompt()

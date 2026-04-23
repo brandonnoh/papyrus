@@ -11,6 +11,9 @@ dependencies = [
     "openpyxl>=3.1.5",
 ]
 
+[project.optional-dependencies]
+pdf = ["playwright>=1.40"]
+
 [project.scripts]
 papyrus = "papyrus.server:main"
 
@@ -22,3 +25,6 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=9.0.3",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

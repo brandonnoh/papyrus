@@ -11,9 +11,9 @@ GitHub: https://github.com/brandonnoh/papyrus
 
 ```bash
 uv sync                                    # 의존성 설치
-uv run pytest tests/ -v                    # 전체 테스트
-uv run pytest tests/test_parser.py -v      # 단일 테스트 파일
-uv run pytest tests/ -k "test_name" -v     # 특정 테스트
+uv run python -m pytest tests/ -v          # 전체 테스트
+uv run python -m pytest tests/test_parser.py -v      # 단일 테스트 파일
+uv run python -m pytest tests/ -k "test_name" -v     # 특정 테스트
 uv run mcp dev src/papyrus/server.py       # MCP 개발 모드
 ```
 
