@@ -289,7 +289,8 @@ AskUserQuestion(
         {{"label": "칼아웃", "description": "> [!warning] / > [!danger] — 경고·위험 강조 박스"}},
         {{"label": "각주", "description": "[^id] — 출처·보충 설명, 마지막 페이지 참고문헌 자동 생성"}},
         {{"label": "표", "description": "파이프 테이블 — 데이터 비교·정리"}},
-        {{"label": "이미지", "description": "![alt](path) — 시각 자료 삽입"}}
+        {{"label": "이미지", "description": "![alt](path) — 시각 자료 삽입"}},
+        {{"label": "차트", "description": "<!-- chart:bar|line|pie|gantt --> — 표를 Chart.js 차트로 시각화"}}
       ]
     }}
   ]
@@ -328,6 +329,18 @@ AskUserQuestion 응답을 받은 후:
 **이미지 선택 시:**
 - `![설명](경로)` 형태로 삽입, figure/figcaption 자동 적용
 - 경로를 모르면 사용자에게 요청
+
+**차트 선택 시:**
+- 표 바로 다음 줄에 주석 한 줄 추가:
+  - `<!-- chart:bar -->` — 비교·순위 (멀티 열 자동 grouped bar)
+  - `<!-- chart:line -->` — 추이·트렌드
+  - `<!-- chart:pie -->` — 비율·구성 (열 1개면 pie, 2개+ 면 doughnut)
+  - `<!-- chart:gantt -->` — 일정 (열 순서: 항목 | 시작(주) | 기간(주))
+- 예시:
+  | 월 | 매출 |
+  |---|---|
+  | 1월 | 5000 |
+  <!-- chart:bar -->
 
 ---
 

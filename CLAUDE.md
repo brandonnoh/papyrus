@@ -21,14 +21,15 @@ uv run mcp dev src/papyrus/server.py       # MCP 개발 모드
 
 ```
 src/papyrus/
-  server.py      # MCP 서버 — @mcp.tool() / @mcp.prompt() 정의
-  brand.py       # BrandConfig — PAPYRUS_* 환경변수 로드
-  parser.py      # parse_markdown() → ReportData, fix_markdown() 자동 수정
-  renderer.py    # render_report() → HTML 문자열, save_report() → 파일
-  catalog.py     # TemplateMeta — meta.yaml 디스커버리/로드
-  validator.py   # StyleViolationError — CSS 규칙 위반 감지
-  static/        # tokens.css (디자인 토큰), base.css (레이아웃), logo.png
-  templates/     # executive-summary/, meeting-minutes/, _base/
+  server.py           # MCP 서버 — @mcp.tool() / @mcp.prompt() 정의
+  brand.py            # BrandConfig — PAPYRUS_* 환경변수 로드
+  parser.py           # parse_markdown() → ReportData, fix_markdown() 자동 수정
+  renderer.py         # render_report() → HTML 문자열, save_report() → 파일
+  _chart_renderer.py  # Chart.js canvas/script 생성 — renderer.py에서 분리
+  catalog.py          # TemplateMeta — meta.yaml 디스커버리/로드
+  validator.py        # StyleViolationError — CSS 규칙 위반 감지
+  static/             # tokens.css (디자인 토큰), base.css (레이아웃), logo.png
+  templates/          # executive-summary/, meeting-minutes/, proposal/, status-report/, retrospective/, _base/
     _base/       # base.html (공통 레이아웃), custom.html (커스텀 문서)
     <id>/        # meta.yaml + template.html + style.css
 ```
@@ -41,6 +42,7 @@ src/papyrus/
   → _apply_frontmatter_defaults()  # date/authors 기본값 주입
   → parse_markdown()       # ReportData (sections, title, authors, classification)
   → render_report()        # Jinja2 렌더링, CSS 조립, brand 색상 패치
+      → _inject_section_charts()  # 차트 표를 Chart.js canvas로 교체
   → save_report()          # {output_dir}/papyrus/{filename}.html + .md
 ```
 
@@ -73,6 +75,7 @@ src/papyrus/
 - `meta.yaml` — id, name, description, keywords, sections, variables
 - `template.html` — `_base/base.html` 상속 (`{% extends "_base/base.html" %}`)
 - `style.css` — 템플릿 전용 스타일 (tokens.css 변수 사용)
+- 차트: 표 + `<!-- chart:bar|line|pie|gantt -->` 주석 → Chart.js 렌더링
 
 ## 배포 구조
 
