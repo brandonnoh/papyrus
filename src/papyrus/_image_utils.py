@@ -37,6 +37,9 @@ _IMG_IN_P_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Matches any <img> tag (handles both <img ...> and <img ... />)
+_IMG_TAG_RE = re.compile(r"<img\b([^>]*)>", re.IGNORECASE)
+
 _SRC_RE = re.compile(r'src\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
 _ALT_RE = re.compile(r'alt\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
 
@@ -53,7 +56,7 @@ def _build_layout(
     direction: str, inner: str, source_dir: Path,
 ) -> str:
     """Build a grid layout div from a matched block."""
-    img_match = _IMG_IN_P_RE.search(inner)
+    img_match = _IMG_TAG_RE.search(inner)
     if not img_match:
         return inner
 
@@ -72,7 +75,10 @@ def _build_layout(
         f"  </figure>"
     )
 
+    # Remove the <img> tag, then clean up any now-empty or orphaned <p> content
     text_content = inner[:img_match.start()] + inner[img_match.end():]
+    text_content = re.sub(r"<p>\s*\n", "<p>", text_content)
+    text_content = re.sub(r"<p>\s*</p>", "", text_content)
     text_content = text_content.strip()
     text_html = f'  <div class="img-layout__text">\n    {text_content}\n  </div>'
 

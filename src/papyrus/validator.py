@@ -205,7 +205,7 @@ def validate_style(
     violations.extend(check_hardcoded_colors(html))
     violations.extend(check_allowed_fonts(html))
     violations.extend(check_inline_styles(html))
-    violations.extend(check_image_structure(html))
+    violations.extend(check_image_structure(doc))
     violations.extend(check_table_captions(html))
     violations.extend(check_required_sections(doc, template_meta))
     return violations
