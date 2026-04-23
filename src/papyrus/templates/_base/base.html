@@ -6,8 +6,11 @@
 <style>
 {{ css_tokens }}
 {{ css_base }}
+.papyrus-chart-wrap{max-height:260px;position:relative}
+.papyrus-chart-wrap canvas{max-height:260px}
 {% block extra_style %}{% endblock %}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <button class="print-btn no-print" onclick="window.print()">PDF / 인쇄</button>
@@ -267,6 +270,29 @@
   } else {
     scheduleRun();
   }
+}());
+</script>
+<script>
+(function () {
+  var _printPairs = [];
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('canvas[data-chart]').forEach(function (canvas) {
+      var img = document.createElement('img');
+      img.src = canvas.toDataURL('image/png');
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '260px';
+      canvas.parentNode.insertBefore(img, canvas.nextSibling);
+      canvas.style.display = 'none';
+      _printPairs.push({ img: img, canvas: canvas });
+    });
+  });
+  window.addEventListener('afterprint', function () {
+    _printPairs.forEach(function (pair) {
+      pair.canvas.style.display = '';
+      if (pair.img.parentNode) pair.img.parentNode.removeChild(pair.img);
+    });
+    _printPairs = [];
+  });
 }());
 </script>
 </body>

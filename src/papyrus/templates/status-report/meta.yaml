@@ -1,0 +1,112 @@
+id: status-report
+name: 업무 보고
+description: 정기 업무 현황 공유 보고서. 주간·월간 모두 사용. A4 3~4페이지.
+author: 식스티헤르츠
+version: "1.0"
+keywords:
+  - 업무보고
+  - 주간보고
+  - 월간보고
+  - 진행상황
+  - KPI
+  - 현황
+  - 보고
+  - 정기
+sections:
+  - id: 완료 업무
+    name: 완료 업무
+    required: true
+  - id: 진행 중
+    name: 진행 중
+    required: true
+  - id: 이슈 및 리스크
+    name: 이슈 및 리스크
+    required: true
+  - id: 다음 계획
+    name: 다음 계획
+    required: true
+  - id: KPI 현황
+    name: KPI 현황
+    required: false
+  - id: 특이사항
+    name: 특이사항
+    required: false
+variables:
+  - name: title
+    type: string
+    required: true
+  - name: authors
+    type: string
+    required: true
+  - name: date
+    type: string
+    required: true
+    description: "보고 기간 예: 2026-04-21 ~ 04-25"
+  - name: classification
+    type: string
+    default: 내부용
+guide_notes: |
+  ## 업무 보고 마크다운 작성 가이드
+
+  ### frontmatter
+  title, authors, date, classification, template_id 를 기입합니다.
+  template_id는 반드시 `status-report` 으로 지정합니다.
+  date는 보고 기간을 기입합니다. 예: "2026-04-21 ~ 04-25 (4주차)"
+  classification 기본값은 내부용입니다.
+
+  ### 섹션 구조
+  `##` 헤딩 = 섹션(한 페이지 단위), `###` = 서브섹션.
+  #### 이상은 렌더링되지 않습니다.
+
+  필수 섹션 순서:
+  1. 표지 (cover) — 본문 비우거나 한 줄 요약만
+  2. 완료 업무 — 이번 기간 완료한 항목 리스트
+  3. 진행 중 — 현재 진행 중인 항목, 진척률 포함
+  4. 이슈 및 리스크 — 현재 이슈·리스크, callout 적극 활용
+  5. 다음 계획 — 다음 기간 예정 항목
+
+  선택 섹션:
+  - KPI 현황 — 핵심 지표 표 + 추이 차트
+  - 특이사항 — 별도 공유 필요한 사항
+
+  ### 완료·진행 중 섹션
+  각 항목은 리스트로 간결하게 기술합니다.
+  서브섹션(###)으로 팀·프로젝트별 분류 가능.
+
+  ### 이슈 및 리스크
+  이슈는 callout으로 강조합니다.
+  > [!warning] 일정 지연 위험 — OO 작업이 예정보다 2일 지연 중
+  > [!danger] 즉각 조치 필요 — OO 시스템 장애 발생
+
+  ### KPI 현황 섹션 (선택)
+  표로 지표명·목표·실적·달성률을 기술하고 `<!-- chart:line -->` 으로 추이 시각화.
+
+  | 지표 | 목표 | 실적 | 달성률 |
+  |---|---|---|---|
+  | 매출 | 1000 | 850 | 85% |
+  <!-- chart:bar -->
+
+  ### 리스트 항목
+  구분자는 반드시 `: ` 를 사용합니다. ` — ` 는 금지입니다.
+
+  ### 인용 블록 (작성자 인사이트 전용)
+  `>` 인용 블록은 작성자의 판단·해석·결론만 기술합니다.
+
+  ### 칼아웃 블록
+  경고 (주황):
+  > [!warning] 주의가 필요한 사항을 기술합니다.
+
+  위험 (빨강):
+  > [!danger] 즉각 조치가 필요한 심각한 사항을 기술합니다.
+
+  칼아웃은 한 줄만 지원합니다. 여러 줄이 필요하면 별도 칼아웃을 사용하세요.
+
+  ### 표
+  마크다운 파이프 테이블을 사용합니다. 첫 번째 열은 자동으로 라벨 스타일이 적용됩니다.
+
+  ### 차트
+  표 바로 아래 줄에 `<!-- chart:TYPE -->` 주석을 추가하면 차트로 렌더링됩니다.
+  - chart:bar — 완료율·진척도 비교
+  - chart:line — KPI 추이 시각화
+  - chart:pie — 업무 구성 비율
+  - chart:gantt — 프로젝트 일정 (열 순서: 항목 | 시작(주) | 기간(주))

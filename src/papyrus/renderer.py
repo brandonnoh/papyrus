@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import base64
+import re
 from pathlib import Path
 
 import jinja2
 
 from papyrus.brand import BrandConfig, load_brand
 from papyrus.catalog import TemplateMeta, get_template
-from papyrus.parser import ReportData
+from papyrus._chart_renderer import inject_charts_into_html
+from papyrus.parser import ReportData, Section, TableData
 from papyrus.validator import StyleViolationError, validate_style
 
 
@@ -116,6 +118,9 @@ def render_report(
         meta = get_template(templates_dir, template_id)
         css = prepare_css(static_dir, meta)
 
+    brand = load_brand()
+    _inject_section_charts(report_data.sections, list(brand.chart_palette))
+
     pages = build_pages(report_data)
     env = create_jinja_env(templates_dir)
     tmpl_path = (
@@ -126,6 +131,22 @@ def render_report(
     html = _render_template(tmpl, report_data, pages, css)
     _check_violations(html, report_data.sections, meta)
     return html
+
+
+def _inject_section_charts(
+    sections: list[Section], palette: list[str],
+) -> None:
+    """Replace chart tables in section html_content with canvas."""
+    for section in sections:
+        if section.tables:
+            section.html_content = inject_charts_into_html(
+                section.html_content, section.tables, palette,
+            )
+        for sub in section.subsections:
+            if sub.tables:
+                sub.html_content = inject_charts_into_html(
+                    sub.html_content, sub.tables, palette,
+                )
 
 
 def _custom_meta() -> TemplateMeta:
@@ -177,7 +198,7 @@ def _check_violations(
 # ---------------------------------------------------------------------------
 
 def _resolve_output_path(output_path: Path) -> Path:
-    """파일이 이미 존재하면 suffix 번호를 붙여 중복 방지."""
+    """Append suffix number when file already exists."""
     if not output_path.exists():
         return output_path
     stem = output_path.stem
@@ -213,7 +234,6 @@ def _read_text(path: Path) -> str:
 
 def _patch_brand_colors(css: str, brand: BrandConfig) -> str:
     """Replace default brand colors with values from BrandConfig."""
-    import re
     css = re.sub(
         r"(--color-primary:\s*)[^;]+",
         rf"\g<1>{brand.color_primary}",
@@ -226,7 +246,23 @@ def _patch_brand_colors(css: str, brand: BrandConfig) -> str:
         css,
         count=1,
     )
+    css = _patch_chart_palette(css, brand.chart_palette)
     return css
+
+
+def _patch_chart_palette(
+    css: str, palette: tuple[str, ...],
+) -> str:
+    """Inject --chart-1 .. --chart-7 CSS variables into :root."""
+    chart_lines = "\n".join(
+        f"  --chart-{i + 1}: {color};"
+        for i, color in enumerate(palette)
+    )
+    return css.replace(
+        ":root {",
+        ":root {\n" + chart_lines,
+        1,
+    )
 
 
 def _patch_watermark(css_tokens: str, logo_uri: str) -> str:

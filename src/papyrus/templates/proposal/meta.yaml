@@ -1,0 +1,105 @@
+id: proposal
+name: 제안서
+description: 새 프로젝트·이니셔티브 승인을 요청하는 제안서. A4 4~6페이지.
+author: 식스티헤르츠
+version: "1.0"
+keywords:
+  - 제안서
+  - 제안
+  - 프로젝트
+  - 기획
+  - 승인
+  - 투자
+  - 예산
+  - 사업
+sections:
+  - id: 배경 및 목적
+    name: 배경 및 목적
+    required: true
+  - id: 제안 내용
+    name: 제안 내용
+    required: true
+  - id: 기대 효과
+    name: 기대 효과
+    required: true
+  - id: 소요 자원
+    name: 소요 자원
+    required: true
+  - id: 결론 및 요청
+    name: 결론 및 요청
+    required: true
+  - id: 리스크
+    name: 리스크
+    required: false
+  - id: 첨부
+    name: 첨부
+    required: false
+variables:
+  - name: title
+    type: string
+    required: true
+  - name: authors
+    type: string
+    required: true
+  - name: date
+    type: string
+    required: true
+  - name: classification
+    type: string
+    default: 대외비
+guide_notes: |
+  ## 제안서 마크다운 작성 가이드
+
+  ### frontmatter
+  title, authors, date, classification, template_id 를 기입합니다.
+  template_id는 반드시 `proposal` 으로 지정합니다.
+  classification 기본값은 대외비입니다.
+
+  ### 섹션 구조
+  `##` 헤딩 = 섹션(한 페이지 단위), `###` = 서브섹션.
+  #### 이상은 렌더링되지 않습니다.
+
+  필수 섹션 순서:
+  1. 표지 (cover) — 본문 비우거나 한 줄 부제목만
+  2. 배경 및 목적 — 왜 이 제안을 하는지, 현황과 문제 인식
+  3. 제안 내용 — 무엇을 어떻게 할 것인지, 단계·일정 포함
+  4. 기대 효과 — 정량·정성 기대 성과
+  5. 소요 자원 — 인력·비용·기간을 표로 정리 (필수)
+  6. 결론 및 요청 — 의사결정 요청, 다음 단계
+
+  선택 섹션:
+  - 리스크 — 예상 리스크와 대응 방안
+  - 첨부 — 참고자료, 상세 데이터
+
+  ### 소요 자원 섹션
+  표(인력·비용·기간)가 필수입니다.
+  예산 비교가 필요하면 `<!-- chart:bar -->` 활용.
+
+  ### 기대 효과
+  정량 목표는 인용 블록(>)으로 핵심 수치 강조.
+  시장 점유율이나 비용 구성은 `<!-- chart:pie -->` 활용.
+
+  ### 리스트 항목
+  구분자는 반드시 `: ` 를 사용합니다. ` — ` 는 금지입니다.
+
+  ### 인용 블록 (작성자 인사이트 전용)
+  `>` 인용 블록은 작성자의 판단·해석·결론만 기술합니다.
+
+  ### 칼아웃 블록
+  경고 (주황):
+  > [!warning] 주의가 필요한 사항을 기술합니다.
+
+  위험 (빨강):
+  > [!danger] 즉각 조치가 필요한 심각한 사항을 기술합니다.
+
+  칼아웃은 한 줄만 지원합니다. 여러 줄이 필요하면 별도 칼아웃을 사용하세요.
+
+  ### 표
+  마크다운 파이프 테이블을 사용합니다. 첫 번째 열은 자동으로 라벨 스타일이 적용됩니다.
+
+  ### 차트
+  표 바로 아래 줄에 `<!-- chart:TYPE -->` 주석을 추가하면 차트로 렌더링됩니다.
+  - chart:bar — 비용 비교, 단계별 예산
+  - chart:pie — 예산 구성, 시장 점유율
+  - chart:line — 예상 성장 추이
+  - chart:gantt — 프로젝트 일정 (열 순서: 항목 | 시작(주) | 기간(주))

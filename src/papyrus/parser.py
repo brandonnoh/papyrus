@@ -16,6 +16,7 @@ import markdown as md
 class TableData:
     headers: list[str]
     rows: list[list[str]]
+    chart_type: str | None = None
 
 
 @dataclass
@@ -123,6 +124,14 @@ def _extract_subsections(content: str) -> list[Section]:
 # 3. parse_tables
 # ---------------------------------------------------------------------------
 
+_CHART_COMMENT_RE = re.compile(
+    r"^\s*<!--\s*chart:(bar|line|pie|gantt)\s*-->\s*$",
+    re.IGNORECASE,
+)
+
+_VALID_CHART_TYPES = frozenset({"bar", "line", "pie", "gantt"})
+
+
 def parse_tables(content: str) -> list[TableData]:
     """Parse markdown pipe-tables from content."""
     tables: list[TableData] = []
@@ -132,10 +141,31 @@ def parse_tables(content: str) -> list[TableData]:
         if _is_table_row(lines[i]):
             table, i = _consume_table(lines, i)
             if table:
+                chart_type = _peek_chart_comment(lines, i)
+                if chart_type:
+                    table = TableData(
+                        headers=table.headers,
+                        rows=table.rows,
+                        chart_type=chart_type,
+                    )
+                    i += 1  # skip the comment line
                 tables.append(table)
         else:
             i += 1
     return tables
+
+
+def _peek_chart_comment(
+    lines: list[str], idx: int,
+) -> str | None:
+    """Return chart type if lines[idx] is a chart comment."""
+    if idx >= len(lines):
+        return None
+    m = _CHART_COMMENT_RE.match(lines[idx])
+    if m:
+        ctype = m.group(1).lower()
+        return ctype if ctype in _VALID_CHART_TYPES else None
+    return None
 
 
 def _is_table_row(line: str) -> bool:
