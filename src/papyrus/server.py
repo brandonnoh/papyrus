@@ -10,7 +10,7 @@ from .catalog import (
     get_template,
     get_template_guide,
 )
-from .parser import fix_markdown, parse_markdown
+from .parser import fix_markdown, parse_frontmatter, parse_markdown
 from .preview import open_dashboard_in_browser, open_preview
 
 from .renderer import render_report, save_report
@@ -220,6 +220,18 @@ def get_config_status() -> dict:
     }
 
 
+_META_KEYS = ("title", "authors", "date", "classification")
+
+
+def _extract_md_metadata(md_path: Path) -> dict[str, str]:
+    """Parse frontmatter from .md file and return metadata fields."""
+    if not md_path.exists():
+        return {k: "" for k in _META_KEYS}
+    text = md_path.read_text(encoding="utf-8")
+    meta, _ = parse_frontmatter(text)
+    return {k: str(meta.get(k, "")) for k in _META_KEYS}
+
+
 @mcp.tool()
 def list_reports(output_dir: str = "") -> list[dict]:
     """저장된 보고서 목록을 반환합니다.
@@ -233,12 +245,65 @@ def list_reports(output_dir: str = "") -> list[dict]:
     reports = []
     for html_path in sorted(out_dir.glob("*.html")):
         md_path = html_path.with_suffix(".md")
-        reports.append({
+        entry = {
             "filename": html_path.name,
             "has_source": md_path.exists(),
             "size_kb": round(html_path.stat().st_size / 1024, 1),
-        })
+            **_extract_md_metadata(md_path),
+        }
+        reports.append(entry)
     return reports
+
+
+def _render_markdown(markdown_content: str, source_dir: Path) -> tuple[str, str]:
+    """fix/parse/validate/render pipeline. Returns (html, processed_md)."""
+    md, _ = fix_markdown(markdown_content)
+    md = _apply_frontmatter_defaults(md)
+    data = parse_markdown(md)
+    _require_classification(data.classification)
+    template_id = data.template_id or "executive-summary"
+    html = render_report(data, template_id, source_dir=source_dir)
+    return html, md
+
+
+def _to_html_path(filename: str, out_dir: Path) -> Path:
+    """Normalize filename to .html path under out_dir."""
+    stem = Path(filename).stem
+    return out_dir / f"{stem}.html"
+
+
+@mcp.tool()
+def update_report_tool(
+    filename: str,
+    markdown_content: str,
+    output_dir: str = "",
+) -> str:
+    """저장된 보고서를 새 마크다운으로 업데이트합니다.
+
+    기존 파일을 덮어써 재렌더링합니다. generate_report_tool과 달리
+    파일명 suffix 번호를 붙이지 않고 원본 경로에 저장합니다.
+
+    Args:
+        filename: 업데이트할 파일명 ('report.html' 또는 'report')
+        markdown_content: 새 마크다운 텍스트
+        output_dir: 보고서 디렉토리 (generate_report_tool과 동일한 값)
+
+    Returns:
+        미리보기 URL
+    """
+    out_dir = _resolve_output_dir(output_dir)
+    html_path = _to_html_path(filename, out_dir)
+    if not html_path.exists():
+        raise FileNotFoundError(
+            f"'{html_path.name}' 없음 ({out_dir}). "
+            f"generate_report_tool로 먼저 생성하세요."
+        )
+    html, processed_md = _render_markdown(markdown_content, out_dir)
+    html_path.write_text(html, encoding="utf-8")
+    html_path.with_suffix(".md").write_text(processed_md, encoding="utf-8")
+    srv = open_preview(html_path)
+    _try_generate_thumbnail(html_path, srv.port)
+    return srv.url
 
 
 def _try_generate_thumbnail(html_path, port: int) -> None:

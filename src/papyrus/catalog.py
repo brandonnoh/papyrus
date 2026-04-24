@@ -27,10 +27,24 @@ class TemplateMeta:
 
 
 # ---------------------------------------------------------------------------
+# Template cache (module-level, keyed by templates_dir)
+# ---------------------------------------------------------------------------
+
+_TEMPLATE_CACHE: dict[Path, list[TemplateMeta]] = {}
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
 def discover_templates(templates_dir: Path) -> list[TemplateMeta]:
+    """Return cached template list; scans filesystem only on first call."""
+    if templates_dir not in _TEMPLATE_CACHE:
+        _TEMPLATE_CACHE[templates_dir] = _scan_templates(templates_dir)
+    return list(_TEMPLATE_CACHE[templates_dir])  # defensive copy
+
+
+def _scan_templates(templates_dir: Path) -> list[TemplateMeta]:
     """Scan templates_dir for subdirectories containing meta.yaml."""
     results: list[TemplateMeta] = []
     for meta_file in sorted(templates_dir.glob("*/meta.yaml")):
@@ -38,6 +52,11 @@ def discover_templates(templates_dir: Path) -> list[TemplateMeta]:
         if meta is not None:
             results.append(meta)
     return results
+
+
+def _clear_template_cache() -> None:
+    """Reset the template cache. Test-only — not for production use."""
+    _TEMPLATE_CACHE.clear()
 
 
 def get_template(templates_dir: Path, template_id: str) -> TemplateMeta:

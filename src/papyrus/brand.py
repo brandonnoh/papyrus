@@ -71,8 +71,25 @@ class BrandConfig:
     chart_palette: tuple[str, ...]
 
 
+_BRAND_CACHE: BrandConfig | None = None
+
+
 def load_brand() -> BrandConfig:
-    """Load branding from PAPYRUS_* env vars. Neutral defaults if unset."""
+    """Return cached BrandConfig; builds from env vars on first call."""
+    global _BRAND_CACHE
+    if _BRAND_CACHE is None:
+        _BRAND_CACHE = _build_brand()
+    return _BRAND_CACHE
+
+
+def _clear_brand_cache() -> None:
+    """Reset the brand cache. Test-only — not for production use."""
+    global _BRAND_CACHE
+    _BRAND_CACHE = None
+
+
+def _build_brand() -> BrandConfig:
+    """Build BrandConfig from PAPYRUS_* env vars."""
     raw_logo = os.environ.get("PAPYRUS_LOGO", "")
     logo = Path(raw_logo) if raw_logo else None
     color_primary = os.environ.get("PAPYRUS_COLOR_PRIMARY", "#09356E")

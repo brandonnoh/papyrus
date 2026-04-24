@@ -21,29 +21,56 @@ uv run mcp dev src/papyrus/server.py       # MCP 개발 모드
 
 ```
 src/papyrus/
-  server.py           # MCP 서버 — @mcp.tool() / @mcp.prompt() 정의
-  brand.py            # BrandConfig — PAPYRUS_* 환경변수 로드
-  parser.py           # parse_markdown() → ReportData, fix_markdown() 자동 수정
-  renderer.py         # render_report() → HTML 문자열, save_report() → 파일
-  _chart_renderer.py  # Chart.js canvas/script 생성 — renderer.py에서 분리
-  catalog.py          # TemplateMeta — meta.yaml 디스커버리/로드
-  validator.py        # StyleViolationError — CSS 규칙 위반 감지
-  static/             # tokens.css (디자인 토큰), base.css (레이아웃), logo.png
-  templates/          # executive-summary/, meeting-minutes/, proposal/, status-report/, retrospective/, _base/
-    _base/       # base.html (공통 레이아웃), custom.html (커스텀 문서)
-    <id>/        # meta.yaml + template.html + style.css
+  server.py              # MCP 서버 — @mcp.tool() / @mcp.prompt() 정의
+  brand.py               # BrandConfig — PAPYRUS_* 환경변수 로드, 차트 팔레트 자동 생성
+  parser.py              # parse_markdown() → ReportData, fix_markdown() 자동 수정
+  renderer.py            # render_report() → HTML, save_report() → 파일
+  _chart_renderer.py     # Chart.js canvas/script 생성 — renderer.py에서 분리
+  _image_utils.py        # embed_images() — layout block 처리, base64 인라인 임베딩
+  _footnote_utils.py     # render_sections_with_footnotes() — 전역 각주 번호 일관성
+  catalog.py             # TemplateMeta — meta.yaml 디스커버리/로드
+  validator.py           # StyleViolationError — 6종 CSS·구조 규칙 위반 감지
+  preview.py             # PreviewServer — 스레드 HTTP 서버, 브라우저 자동 오픈
+  _preview_css_js.py     # PREVIEW_CSS / PREVIEW_JS 상수 (preview.py 줄수 분리)
+  _preview_dashboard.py  # build_html() — 대시보드 HTML 생성
+  _preview_pdf.py        # render_pdf() — Playwright로 PDF 바이트 반환
+  _thumbnail.py          # generate_thumbnail() — Playwright로 첫 페이지 PNG 캡처
+  static/                # tokens.css (디자인 토큰), base.css (레이아웃), logo.png
+  templates/             # executive-summary/, meeting-minutes/, proposal/, status-report/, retrospective/, _base/
+    _base/          # base.html (공통 레이아웃), custom.html (커스텀 문서)
+    <id>/           # meta.yaml + template.html + style.css
 ```
+
+## MCP 도구 목록
+
+| 도구 | 역할 |
+|------|------|
+| `list_templates()` | 템플릿 목록 반환 — 보고서 생성 첫 단계 |
+| `get_template_guide_tool(template_id)` | 템플릿별 섹션·변수·가이드 반환 |
+| `get_section_pool_tool()` | 커스텀 문서용 전체 섹션 풀 |
+| `generate_report_tool(...)` | 마크다운 → HTML 저장 + 미리보기 서버 실행 |
+| `get_report_source(filename, output_dir)` | 저장된 .md 원본 반환 |
+| `get_config_status()` | PAPYRUS_* 환경변수 현재값 확인 |
+| `list_reports(output_dir)` | 저장된 보고서 목록 (파일명·크기) |
+| `open_dashboard(output_dir)` | 대시보드 브라우저 오픈 |
+
+**프롬프트**: `start_report` (보고서 작성 위저드), `setup` (환경변수 설정 위저드)
 
 ## 데이터 흐름
 
 ```
 마크다운 텍스트
-  → fix_markdown()         # ' — ' → ': ' 자동 수정, 사실형 blockquote 제거
-  → _apply_frontmatter_defaults()  # date/authors 기본값 주입
-  → parse_markdown()       # ReportData (sections, title, authors, classification)
-  → render_report()        # Jinja2 렌더링, CSS 조립, brand 색상 패치
-      → _inject_section_charts()  # 차트 표를 Chart.js canvas로 교체
-  → save_report()          # {output_dir}/papyrus/{filename}.html + .md
+  → fix_markdown()                  # ' — ' → ': ', 사실형 blockquote 제거
+  → _apply_frontmatter_defaults()   # date/authors 기본값 주입
+  → parse_markdown()
+      → render_sections_with_footnotes()  # 전역 각주 번호 통합 렌더링
+      → ReportData (sections, title, authors, classification, footnotes_html)
+  → render_report()                 # Jinja2 렌더링, CSS 조립, brand 색상 패치
+      → _inject_section_charts()    # 차트 표를 Chart.js canvas로 교체
+      → embed_images()              # layout block → grid div, 이미지 → base64
+  → save_report()                   # {output_dir}/papyrus/{filename}.html + .md
+  → open_preview()                  # 새 PreviewServer(랜덤 포트) 시작 + 브라우저 오픈
+  → generate_thumbnail() (백그라운드 스레드)
 ```
 
 ## 핵심 규칙
@@ -58,18 +85,37 @@ src/papyrus/
 - 이미지 경로는 output_dir 기준 상대경로 또는 절대경로, URL(https://) 지원
 - 파일 300줄 / 함수 20줄 제한
 
+## validator.py — 6종 검사
+
+| 검사 | 심각도 | 내용 |
+|------|--------|------|
+| `no-hardcoded-color` | error | `<style>` 내 하드코딩 hex 색상 |
+| `no-inline-style` | error | `style=` 인라인 속성 |
+| `image-structure` | error | `<img>`가 `<figure>` 또는 `.img-layout` 밖에 위치 |
+| `required-section` | error | meta.yaml의 required 섹션 누락 |
+| `allowed-fonts` | warning | 허용 목록 외 font-family 사용 |
+| `table-caption` | warning | `<caption>` 없는 `<table>` |
+
+## preview 서버 구조
+
+- `generate_report_tool` 호출마다 `PreviewServer` 인스턴스를 새로 생성 (OS 랜덤 포트)
+- 서버는 daemon 스레드로 실행 — 프로세스 종료 시 자동 정리
+- `/` → 가장 최근 보고서, `/{filename}.html` → 특정 파일, `/dashboard` → 대시보드
+- `/export-pdf` → Playwright PDF 렌더링, `/thumbnail/{file}` → 썸네일 PNG
+- `/save` (POST) → contenteditable 편집 내용 파일에 저장
+
+## preview 모드 CSS 우선순위 규칙
+
+- `_preview_css_js.py`의 `PREVIEW_CSS`는 `.page--body { background: transparent !important }` 를 적용한다.
+- 특정 `.page--body` 하위 변형(예: `page--footnotes`)을 예외 처리하려면
+  **복합 선택자** `.page--body.page--footnotes` 를 써서 특이도(specificity)를 높여야 한다.
+  단순 `.page--footnotes` 선택자는 특이도가 같아 순서에만 의존하므로 신뢰할 수 없다.
+
 ## 개발 시 절대 금지 사항
 
 - **MCP 서버 프로세스 kill 금지** — `pkill`, `kill` 등으로 papyrus MCP 서버를 임의 종료하지 않는다.
   코드 변경 후 반영이 필요하면 사용자에게 `/mcp` 재연결을 안내하는 것에 그친다.
   서버를 죽이면 Claude Code MCP 연결이 끊어지고 사용자가 수동으로 재연결해야 한다.
-
-## preview 모드 CSS 우선순위 규칙
-
-- `preview.py`의 `_PREVIEW_CSS`는 `.page--body { background: transparent !important }` 를 적용한다.
-- 특정 `.page--body` 하위 변형(예: `page--footnotes`)을 예외 처리하려면
-  **복합 선택자** `.page--body.page--footnotes` 를 써서 특이도(specificity)를 높여야 한다.
-  단순 `.page--footnotes` 선택자는 특이도가 같아 순서에만 의존하므로 신뢰할 수 없다.
 
 ## 템플릿 추가 방법
 
@@ -88,7 +134,7 @@ src/papyrus/
 ## MCP 진입점
 
 - **슬래시 명령어**: `/papyrus:start_report` (`@mcp.prompt()` 단일 노출)
-- `start_report`는 보고서 작성 + 브랜딩 설정 두 가지 모두 처리
+- `start_report`는 보고서 작성 위저드, `setup`은 환경변수 설정 위저드
 - `list_templates` → `get_template_guide_tool` → 마크다운 작성 → `generate_report_tool` 순서 필수
 - `output_dir`는 현재 프로젝트 절대경로 전달 필수 (미전달 시 `~/papyrus-reports`)
 

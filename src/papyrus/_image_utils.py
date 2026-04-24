@@ -7,9 +7,17 @@ import logging
 import mimetypes
 import re
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+_URL_SRC_RE = re.compile(
+    r'<img\b[^>]*src\s*=\s*["\']'
+    r"(https?://[^\"']*)"
+    r'["\']',
+    re.IGNORECASE,
+)
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -18,9 +26,20 @@ logger = logging.getLogger(__name__)
 
 def embed_images(html: str, source_dir: Path) -> str:
     """Process layout blocks, wrap standalone imgs, embed as base64."""
-    html = _process_layout_blocks(html, source_dir)
-    html = _wrap_standalone_imgs(html, source_dir)
+    url_cache = _prefetch_urls(html)
+    html = _process_layout_blocks(html, source_dir, url_cache)
+    html = _wrap_standalone_imgs(html, source_dir, url_cache)
     return html
+
+
+def _prefetch_urls(html: str) -> dict[str, str]:
+    """Fetch all URL images in parallel, return {url: data_uri}."""
+    urls = list(dict.fromkeys(_URL_SRC_RE.findall(html)))
+    if not urls:
+        return {}
+    with ThreadPoolExecutor() as pool:
+        results = list(pool.map(_fetch_url, urls))
+    return dict(zip(urls, results))
 
 
 # ---------------------------------------------------------------------------
@@ -44,16 +63,20 @@ _SRC_RE = re.compile(r'src\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
 _ALT_RE = re.compile(r'alt\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
 
 
-def _process_layout_blocks(html: str, source_dir: Path) -> str:
+def _process_layout_blocks(
+    html: str, source_dir: Path, url_cache: dict[str, str] | None = None,
+) -> str:
     """<!-- img:left/right -->...<img>...text...<!-- /img --> -> grid div."""
+    cache = url_cache or {}
     return _LAYOUT_BLOCK_RE.sub(
-        lambda m: _build_layout(m.group(1), m.group(2), source_dir),
+        lambda m: _build_layout(m.group(1), m.group(2), source_dir, cache),
         html,
     )
 
 
 def _build_layout(
     direction: str, inner: str, source_dir: Path,
+    url_cache: dict[str, str] | None = None,
 ) -> str:
     """Build a grid layout div from a matched block."""
     img_match = _IMG_TAG_RE.search(inner)
@@ -63,7 +86,7 @@ def _build_layout(
     attrs = img_match.group(1)
     src = _extract_attr(_SRC_RE, attrs, "")
     alt = _extract_attr(_ALT_RE, attrs, "")
-    new_src = _embed_src(src, source_dir)
+    new_src = _embed_src(src, source_dir, url_cache)
     if new_src == src and not src.startswith("data:"):
         alt = _missing_alt(src, alt)
 
@@ -101,7 +124,9 @@ _STANDALONE_IMG_RE = re.compile(
 )
 
 
-def _wrap_standalone_imgs(html: str, source_dir: Path) -> str:
+def _wrap_standalone_imgs(
+    html: str, source_dir: Path, url_cache: dict[str, str] | None = None,
+) -> str:
     """<p><img ...></p> -> <figure class="img-full">..."""
     parts: list[str] = []
     last_end = 0
@@ -115,7 +140,7 @@ def _wrap_standalone_imgs(html: str, source_dir: Path) -> str:
 
         src = _extract_attr(_SRC_RE, attrs, "")
         alt = _extract_attr(_ALT_RE, attrs, "")
-        new_src = _embed_src(src, source_dir)
+        new_src = _embed_src(src, source_dir, url_cache)
         if new_src == src and not src.startswith("data:"):
             alt = _missing_alt(src, alt)
 
@@ -156,11 +181,15 @@ def _inside_context(html: str, pos: int) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _embed_src(src: str, source_dir: Path) -> str:
+def _embed_src(
+    src: str, source_dir: Path, url_cache: dict[str, str] | None = None,
+) -> str:
     """Convert img src to base64 data URI."""
     if src.startswith("data:"):
         return src
     if src.startswith(("http://", "https://")):
+        if url_cache and src in url_cache:
+            return url_cache[src]
         return _fetch_url(src)
     return _read_local(src, source_dir)
 
@@ -196,12 +225,20 @@ def _guess_mime(path: str) -> str:
 
 
 def _missing_alt(src: str, alt: str) -> str:
-    """Return alt text for missing local file."""
-    if not (src.startswith("data:") or src.startswith(("http://", "https://"))):
+    """Return alt text for missing/failed image."""
+    if src.startswith(("http://", "https://")):
+        return _failed_url_alt(src)
+    if not src.startswith("data:"):
         path = Path(src)
         if not path.is_absolute():
             return f"[이미지 없음: {src}]"
     return alt
+
+
+def _failed_url_alt(url: str) -> str:
+    """Build alt text for a URL that failed to fetch."""
+    truncated = url if len(url) <= 60 else url[:57] + "..."
+    return f"[이미지 로드 실패: {truncated}]"
 
 
 def _extract_attr(pat: re.Pattern, attrs: str, default: str) -> str:
