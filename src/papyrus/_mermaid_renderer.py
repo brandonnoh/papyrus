@@ -26,6 +26,14 @@ def _is_supported(diagram_src: str) -> bool:
     return first_word.lower() in _SUPPORTED_TYPES
 
 
+def _is_vertical(diagram_src: str) -> bool:
+    """Check if flowchart/graph uses top-down direction (TD/TB)."""
+    tokens = diagram_src.strip().split()
+    if len(tokens) < 2:
+        return False
+    return tokens[1].upper() in {"TD", "TB"}
+
+
 def _decode_html_entities(text: str) -> str:
     """Restore HTML-encoded characters back to plain text."""
     return html.unescape(text)
@@ -45,8 +53,9 @@ def inject_mermaid_diagrams(
         if not _is_supported(raw):
             continue
         found = True
+        variant = " papyrus-mermaid--vertical" if _is_vertical(raw) else ""
         diagram_div = (
-            f'<div class="papyrus-mermaid-wrap">'
+            f'<div class="papyrus-mermaid-wrap{variant}">'
             f'<pre class="mermaid">{raw}</pre>'
             f'</div>'
         )

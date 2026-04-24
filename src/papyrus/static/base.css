@@ -430,6 +430,16 @@ pre code {
   width: auto;
 }
 
+/* 세로형(TD/TB) — 높이 제한 해제, 가로 50%로 제한 */
+.papyrus-mermaid--vertical {
+  max-height: none;
+}
+
+.papyrus-mermaid--vertical svg {
+  max-height: none;
+  max-width: 50%;
+}
+
 /* ----------------------------------------------------------
    9. 섹션 레이블
    ---------------------------------------------------------- */
