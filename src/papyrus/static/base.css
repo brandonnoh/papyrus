@@ -430,14 +430,16 @@ pre code {
   width: auto;
 }
 
-/* 세로형(TD/TB) — 높이 제한 해제, 가로 50%로 제한 */
+/* 세로형(TD/TB) — 높이 제한 해제, 컨테이너 가로 50%로 제한 */
 .papyrus-mermaid--vertical {
   max-height: none;
+  max-width: 50%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .papyrus-mermaid--vertical svg {
   max-height: none;
-  max-width: 50%;
 }
 
 /* 세로 확장형(sequence 등) — 높이 제한 해제, 가로 100% */
