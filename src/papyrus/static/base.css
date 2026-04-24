@@ -391,7 +391,9 @@ pre {
   border: var(--border-table) solid var(--color-border-code);
   padding: 8pt 10pt;
   margin: 8pt 0 6pt var(--content-indent);
-  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
   line-height: var(--line-height-table);
   border-radius: 3px;
 }
