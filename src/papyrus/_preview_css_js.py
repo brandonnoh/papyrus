@@ -565,6 +565,27 @@ PREVIEW_JS = """<script>
     }
   }
 
+  // Rebuild on content edits (ResizeObserver alone misses edits
+  // because preview-page min-height keeps body size unchanged)
+  var _attachInputRebuild = function() {
+    var bodyEl = document.querySelector('.page--body');
+    if (!bodyEl) return;
+    bodyEl.addEventListener('input', function() {
+      if (_justBuilt) return;
+      clearTimeout(_buildTimer);
+      _buildTimer = setTimeout(function() {
+        _justBuilt = true;
+        buildPreviewPages();
+        setTimeout(function() { _justBuilt = false; }, 400);
+      }, 300);
+    });
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _attachInputRebuild);
+  } else {
+    _attachInputRebuild();
+  }
+
   window.__papyrusBuildPages = buildPreviewPages;
 })();
 </script>"""
