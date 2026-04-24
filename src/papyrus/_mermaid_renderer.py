@@ -85,7 +85,7 @@ def _build_init_script(primary_color: str) -> str:
         f"  startOnLoad: true,\n"
         f"  theme: 'base',\n"
         f"  flowchart: {{ useMaxWidth: true }},\n"
-        f"  sequence: {{ useMaxWidth: true, width: 500 }},\n"
+        f"  sequence: {{ useMaxWidth: true, mirrorActors: true, messageMargin: 40 }},\n"
         f"  themeVariables: {{\n"
         f"    primaryColor: '{primary_color}20',\n"
         f"    primaryBorderColor: '{primary_color}',\n"
