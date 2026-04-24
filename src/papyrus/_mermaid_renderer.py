@@ -26,12 +26,15 @@ def _is_supported(diagram_src: str) -> bool:
     return first_word.lower() in _SUPPORTED_TYPES
 
 
-def _is_vertical(diagram_src: str) -> bool:
-    """Check if flowchart/graph uses top-down direction (TD/TB)."""
+def _layout_variant(diagram_src: str) -> str:
+    """Return CSS modifier class based on diagram layout type."""
+    first = diagram_src.strip().split()[0].lower() if diagram_src.strip() else ""
+    if first in {"sequencediagram"}:
+        return " papyrus-mermaid--tall"
     tokens = diagram_src.strip().split()
-    if len(tokens) < 2:
-        return False
-    return tokens[1].upper() in {"TD", "TB"}
+    if len(tokens) >= 2 and tokens[1].upper() in {"TD", "TB"}:
+        return " papyrus-mermaid--vertical"
+    return ""
 
 
 def _decode_html_entities(text: str) -> str:
@@ -53,7 +56,7 @@ def inject_mermaid_diagrams(
         if not _is_supported(raw):
             continue
         found = True
-        variant = " papyrus-mermaid--vertical" if _is_vertical(raw) else ""
+        variant = _layout_variant(raw)
         diagram_div = (
             f'<div class="papyrus-mermaid-wrap{variant}">'
             f'<pre class="mermaid">{raw}</pre>'
