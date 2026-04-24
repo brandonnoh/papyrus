@@ -11,6 +11,7 @@ import jinja2
 from papyrus.brand import BrandConfig, load_brand
 from papyrus.catalog import TemplateMeta, get_template
 from papyrus._chart_renderer import inject_charts_into_html
+from papyrus._mermaid_renderer import inject_mermaid_diagrams
 from papyrus.parser import ReportData, Section, TableData
 from papyrus.validator import StyleViolationError, validate_style
 
@@ -130,6 +131,7 @@ def render_report(
     )
     tmpl = env.get_template(tmpl_path)
     html = _render_template(tmpl, report_data, pages, css)
+    html = inject_mermaid_diagrams(html, brand.color_primary)
     if source_dir is not None:
         from ._image_utils import embed_images
         html = embed_images(html, source_dir)

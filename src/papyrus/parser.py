@@ -229,7 +229,7 @@ _CALLOUT_LINE_RE = re.compile(r"^> \[!(warning|danger)\] ?(.*)$", re.IGNORECASE 
 def render_section_html(section: Section) -> str:
     """Convert section markdown to HTML, replacing blockquotes."""
     preprocessed = _preprocess_callouts(section.content)
-    raw_html = md.markdown(preprocessed, extensions=["tables"])
+    raw_html = md.markdown(preprocessed, extensions=["tables", "fenced_code"])
     return _replace_blockquotes(raw_html)
 
 

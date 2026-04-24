@@ -403,7 +403,28 @@ pre code {
 }
 
 /* ----------------------------------------------------------
-   8. 섹션 레이블
+   8. 다이어그램 (Mermaid)
+   ---------------------------------------------------------- */
+
+.papyrus-mermaid-wrap {
+  margin: 8pt 0 6pt var(--content-indent);
+  text-align: center;
+}
+
+.papyrus-mermaid-wrap pre.mermaid {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: center;
+}
+
+.papyrus-mermaid-wrap svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ----------------------------------------------------------
+   9. 섹션 레이블
    ---------------------------------------------------------- */
 
 .section-label {
