@@ -385,7 +385,8 @@ AskUserQuestion(
         {{"label": "각주", "description": "[^id] — 출처·보충 설명, 마지막 페이지 참고문헌 자동 생성"}},
         {{"label": "표", "description": "파이프 테이블 — 데이터 비교·정리"}},
         {{"label": "이미지", "description": "![alt](path) — 시각 자료 삽입"}},
-        {{"label": "차트", "description": "<!-- chart:bar|line|pie|gantt --> — 표를 Chart.js 차트로 시각화"}}
+        {{"label": "차트", "description": "<!-- chart:bar|line|pie|gantt --> — 표를 Chart.js 차트로 시각화"}},
+        {{"label": "다이어그램", "description": "```mermaid — 플로우차트·시퀀스 다이어그램·마인드맵"}}
       ]
     }}
   ]
@@ -451,6 +452,18 @@ AskUserQuestion 응답을 받은 후:
   |---|---|
   | 1월 | 5000 |
   <!-- chart:bar -->
+
+**다이어그램 선택 시:**
+- ` ```mermaid ` 코드블록으로 작성:
+  - `flowchart LR` — 가로 프로세스 흐름
+  - `flowchart TD` — 세로 의사결정 흐름
+  - `sequenceDiagram` — 시스템·참여자 간 통신
+  - `mindmap` — 개념·구조 방사형 정리
+- 예시:
+  ```mermaid
+  flowchart LR
+      A[기획] --> B[개발] --> C[배포]
+  ```
 
 ---
 

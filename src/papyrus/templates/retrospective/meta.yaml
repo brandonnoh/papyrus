@@ -126,6 +126,13 @@ guide_notes: |
   - chart:pie — 이슈 유형별 분류
   - chart:gantt — 프로젝트 타임라인 (열 순서: 항목 | 시작(주) | 기간(주))
 
+  ### 다이어그램
+  ```mermaid 코드블록으로 다이어그램을 삽입합니다.
+  - flowchart LR — 가로 프로세스 흐름
+  - flowchart TD — 세로 의사결정 흐름
+  - sequenceDiagram — 시스템·참여자 간 통신
+  - mindmap — 개념·구조 방사형 정리
+
   ### 이미지
   전체 너비: `![캡션](./파일명.png)` 또는 URL
   좌측 이미지 + 우측 텍스트:

@@ -67,6 +67,7 @@ src/papyrus/
       → ReportData (sections, title, authors, classification, footnotes_html)
   → render_report()                 # Jinja2 렌더링, CSS 조립, brand 색상 패치
       → _inject_section_charts()    # 차트 표를 Chart.js canvas로 교체
+      → inject_mermaid_diagrams()   # ```mermaid 코드블록 → Mermaid.js SVG
       → embed_images()              # layout block → grid div, 이미지 → base64
   → save_report()                   # {output_dir}/papyrus/{filename}.html + .md
   → open_preview()                  # 새 PreviewServer(랜덤 포트) 시작 + 브라우저 오픈
@@ -83,6 +84,8 @@ src/papyrus/
 - blockquote (`>`) = 작성자 인사이트 전용, 수치/사실 나열 금지
 - 이미지: `![캡션](경로)` 전체 너비, `<!-- img:left/right -->...<img>...텍스트...<!-- /img -->` 2컬럼 레이아웃
 - 이미지 경로는 output_dir 기준 상대경로 또는 절대경로, URL(https://) 지원
+- 다이어그램: ` ```mermaid ` 코드블록 → Mermaid.js SVG 렌더링 (flowchart, sequenceDiagram, mindmap)
+- 차트: 표 + `<!-- chart:bar|line|pie|gantt -->` → Chart.js canvas 렌더링
 - 파일 300줄 / 함수 20줄 제한
 
 ## validator.py — 6종 검사
@@ -124,6 +127,7 @@ src/papyrus/
 - `template.html` — `_base/base.html` 상속 (`{% extends "_base/base.html" %}`)
 - `style.css` — 템플릿 전용 스타일 (tokens.css 변수 사용)
 - 차트: 표 + `<!-- chart:bar|line|pie|gantt -->` 주석 → Chart.js 렌더링
+- 다이어그램: ` ```mermaid ` 코드블록 → Mermaid.js 렌더링 (flowchart, sequenceDiagram, mindmap)
 
 ## 배포 구조
 
