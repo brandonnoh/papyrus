@@ -263,6 +263,28 @@ PREVIEW_JS = """<script>
 
     if (entries.length === 0) return;
 
+    // Merge previously split table groups back together
+    var merged = [];
+    for (var mi = 0; mi < entries.length; mi++) {
+      var me = entries[mi];
+      if (me.el.tagName === 'TABLE' && me.el.dataset.papyrusTableGroup) {
+        var gid = me.el.dataset.papyrusTableGroup;
+        while (mi + 1 < entries.length
+            && entries[mi + 1].el.tagName === 'TABLE'
+            && entries[mi + 1].el.dataset.papyrusTableGroup === gid) {
+          mi++;
+          var srcTb = entries[mi].el.querySelector('tbody');
+          var dstTb = me.el.querySelector('tbody');
+          if (srcTb && dstTb) {
+            Array.from(srcTb.querySelectorAll('tr')).forEach(function(r) { dstTb.appendChild(r); });
+          }
+        }
+        delete me.el.dataset.papyrusTableGroup;
+      }
+      merged.push(me);
+    }
+    entries = merged;
+
     var measPage = document.createElement('div');
     measPage.className = 'preview-page';
     measPage.style.cssText = 'visibility:hidden;position:absolute;top:0;left:-9999px';
@@ -397,6 +419,10 @@ PREVIEW_JS = """<script>
       var c2 = t2.cloneNode(true); ms2.appendChild(c2);
       var rh2 = c2.getBoundingClientRect().height;
       document.body.removeChild(md2);
+
+      var gid = table.dataset.papyrusTableGroup || ('tg' + Date.now() + Math.random().toString(36).substr(2,4));
+      t1.dataset.papyrusTableGroup = gid;
+      t2.dataset.papyrusTableGroup = gid;
 
       return {parts: [t1, t2], heights: [rh1, rh2]};
     }
