@@ -35,6 +35,7 @@ body {
   background: var(--color-bg-page);
   box-shadow: var(--shadow-page);
   position: relative;
+  overflow: hidden;
 }
 
 .page--body {
