@@ -29,7 +29,7 @@ def _is_supported(diagram_src: str) -> bool:
 def _layout_variant(diagram_src: str) -> str:
     """Return CSS modifier class based on diagram layout type."""
     first = diagram_src.strip().split()[0].lower() if diagram_src.strip() else ""
-    if first in {"sequencediagram"}:
+    if first in {"sequencediagram", "mindmap"}:
         return " papyrus-mermaid--tall"
     tokens = diagram_src.strip().split()
     if len(tokens) >= 2 and tokens[1].upper() in {"TD", "TB"}:
