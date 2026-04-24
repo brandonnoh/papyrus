@@ -228,6 +228,16 @@ PREVIEW_JS = """<script>
     var bodyEl = document.querySelector('.page--body');
     if (!bodyEl) return;
 
+    // Save scroll position and cursor
+    var savedScrollY = window.scrollY;
+    var savedAnchorNode = null;
+    var savedAnchorOffset = 0;
+    var sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedAnchorNode = sel.anchorNode;
+      savedAnchorOffset = sel.anchorOffset;
+    }
+
     var rawEls = [];
     var existingPages = Array.from(bodyEl.querySelectorAll('.preview-page'));
     if (existingPages.length > 0) {
@@ -514,6 +524,18 @@ PREVIEW_JS = """<script>
     document.querySelectorAll('.doc-section').forEach(function(sec) {
       sec.setAttribute('contenteditable', 'true');
     });
+
+    // Restore scroll and cursor
+    window.scrollTo(0, savedScrollY);
+    if (savedAnchorNode && savedAnchorNode.parentNode) {
+      try {
+        var r = document.createRange();
+        r.setStart(savedAnchorNode, Math.min(savedAnchorOffset, savedAnchorNode.length || 0));
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      } catch (e) { /* node moved or offset invalid — scroll restore is enough */ }
+    }
   }
 
   var _buildTimer = null;
