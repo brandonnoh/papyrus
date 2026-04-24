@@ -20,7 +20,7 @@ def render_sections_with_footnotes(
         f"## {s.heading}\n{s.content}" for s in sections
     )
     preprocessed = _preprocess_callouts(combined)
-    full_html = md.markdown(preprocessed, extensions=["tables", "footnotes"])
+    full_html = md.markdown(preprocessed, extensions=["tables", "fenced_code", "footnotes"])
     full_html = _replace_blockquotes(full_html)
     body_html, footnotes_html = _strip_footnote_block(full_html)
     section_htmls = _split_sections_from_html(body_html, sections)
