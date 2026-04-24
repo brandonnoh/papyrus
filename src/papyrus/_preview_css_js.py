@@ -11,6 +11,9 @@ PREVIEW_CSS = """<style>
     padding: 0 !important;
     min-height: 0 !important;
   }
+  .page--body::after {
+    display: none !important;
+  }
   .preview-page {
     width: var(--page-width);
     min-height: var(--page-height);
