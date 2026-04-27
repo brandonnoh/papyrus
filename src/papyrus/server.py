@@ -50,10 +50,17 @@ def list_templates() -> list[dict]:
        - 외부용 (고객·파트너 공유 가능)
     2. 반환된 템플릿 목록의 keywords와 사용자 의도를 비교해 적합한 템플릿을 추천합니다.
        가장 적합한 것에 → 화살표 강조. 맨 아래 '커스텀 — 자유 형식' 옵션 항상 포함.
-    3. 사용자 확인을 받습니다.
-    4. get_template_guide_tool(template_id) 호출합니다.
-    5. 마크다운을 작성합니다.
-    6. generate_report_tool을 호출합니다.
+    3. 사용자에게 구성 요소를 질문합니다 (복수 선택 가능):
+       - 칼아웃: > [!warning] / > [!danger] 경고·위험 강조 박스
+       - 각주: [^id] 출처·보충 설명, 마지막 페이지 참고문헌 자동 생성
+       - 표: 파이프 테이블 — 데이터 비교·정리
+       - 이미지: ![alt](path) 시각 자료 삽입
+       - 차트: <!-- chart:bar|line|pie|gantt --> 표를 Chart.js 차트로 시각화
+       - 다이어그램: ```mermaid 플로우차트·시퀀스·마인드맵
+    4. 사용자 확인을 받습니다.
+    5. get_template_guide_tool(template_id) 호출합니다.
+    6. 선택된 구성 요소만 사용하여 마크다운을 작성합니다 (미선택 요소 사용 금지).
+    7. generate_report_tool을 호출합니다.
 
     이 순서를 지키지 않으면 등급 없는 보고서가 생성되거나 엉뚱한 템플릿이 사용됩니다."""
     templates = discover_templates(TEMPLATES_DIR)
