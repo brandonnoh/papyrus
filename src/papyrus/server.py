@@ -20,6 +20,13 @@ mcp = FastMCP("papyrus")
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 STATIC_DIR = Path(__file__).parent / "static"
 
+_active_servers: list = []
+
+
+def _source_dir_for(out_dir: Path) -> Path:
+    """이미지 상대경로 해석 기준 디렉토리 (프로젝트 루트)."""
+    return out_dir.parent if out_dir.name == "papyrus" else out_dir
+
 
 def _resolve_output_dir(output_dir: str) -> Path:
     """출력 디렉토리 결정: 인자/papyrus → PAPYRUS_OUTPUT_DIR → ~/papyrus-reports."""
@@ -165,11 +172,12 @@ def generate_report_tool(
     if report_data.template_id:
         template_id = report_data.template_id
     out_dir = _resolve_output_dir(output_dir)
-    html = render_report(report_data, template_id, source_dir=out_dir)
+    html = render_report(report_data, template_id, source_dir=_source_dir_for(out_dir))
     saved = save_report(html, out_dir / output_filename)
     md_path = saved.with_suffix(".md")
     md_path.write_text(markdown_content, encoding="utf-8")
     _preview_server = open_preview(saved)
+    _active_servers.append(_preview_server)
     _try_generate_thumbnail(saved, _preview_server.port)
     url = _preview_server.url
     notices = []
@@ -298,10 +306,11 @@ def update_report_tool(
             f"'{html_path.name}' 없음 ({out_dir}). "
             f"generate_report_tool로 먼저 생성하세요."
         )
-    html, processed_md = _render_markdown(markdown_content, out_dir)
+    html, processed_md = _render_markdown(markdown_content, _source_dir_for(out_dir))
     html_path.write_text(html, encoding="utf-8")
     html_path.with_suffix(".md").write_text(processed_md, encoding="utf-8")
     srv = open_preview(html_path)
+    _active_servers.append(srv)
     _try_generate_thumbnail(html_path, srv.port)
     return srv.url
 
@@ -332,6 +341,7 @@ def open_dashboard(output_dir: str = "") -> str:
     """
     out_dir = _resolve_output_dir(output_dir)
     srv = open_dashboard_in_browser(out_dir)
+    _active_servers.append(srv)
     return f"대시보드를 열었습니다: http://127.0.0.1:{srv.port}/dashboard"
 
 

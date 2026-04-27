@@ -17,6 +17,7 @@ _log = logging.getLogger(__name__)
 
 _PREVIEW_MARKER_START = "<!-- papyrus-preview-start -->"
 _PREVIEW_MARKER_END = "<!-- papyrus-preview-end -->"
+_MAX_SAVE_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
 def _inject_preview(html: str, base_url: str, filename: str = "") -> str:
@@ -100,11 +101,14 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _serve_thumbnail(self, path: str) -> None:
         fname = path.split("/thumbnail/", 1)[-1]
-        if not fname or ".." in fname:
+        if not fname:
             self._respond(404, b"Not Found", "text/plain")
             return
         reports_dir = self._reports_dir()
-        thumb_path = reports_dir / fname
+        thumb_path = (reports_dir / fname).resolve()
+        if not thumb_path.is_relative_to(reports_dir.resolve()):
+            self._respond(404, b"Not Found", "text/plain")
+            return
         if not thumb_path.exists():
             self._respond(404, b"Not Found", "text/plain")
             return
@@ -123,7 +127,10 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _serve_html_by_name(self, filename: str) -> None:
         reports_dir = self._reports_dir()
-        target = reports_dir / filename
+        target = (reports_dir / filename).resolve()
+        if not target.is_relative_to(reports_dir.resolve()):
+            self._respond(404, b"Not Found", "text/plain")
+            return
         if not target.exists():
             self._respond(404, b"Not Found", "text/plain")
             return
@@ -134,6 +141,9 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _handle_save(self) -> None:
         length = int(self.headers.get("Content-Length", 0))
+        if length > _MAX_SAVE_BYTES:
+            self._respond(413, b"body too large", "text/plain")
+            return
         raw = self.rfile.read(length)
         data = json.loads(raw)
         html_path = getattr(self.server, "html_path", None)

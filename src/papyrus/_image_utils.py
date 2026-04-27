@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import base64
+import ipaddress
 import logging
 import mimetypes
 import re
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+_MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB
+_DENIED_HOSTS = frozenset({"localhost", "127.0.0.1", "0.0.0.0", "[::1]"})
 
 _URL_SRC_RE = re.compile(
     r'<img\b[^>]*src\s*=\s*["\']'
@@ -37,7 +42,7 @@ def _prefetch_urls(html: str) -> dict[str, str]:
     urls = list(dict.fromkeys(_URL_SRC_RE.findall(html)))
     if not urls:
         return {}
-    with ThreadPoolExecutor() as pool:
+    with ThreadPoolExecutor(max_workers=8) as pool:
         results = list(pool.map(_fetch_url, urls))
     return dict(zip(urls, results))
 
@@ -194,12 +199,30 @@ def _embed_src(
     return _read_local(src, source_dir)
 
 
+def _is_denied_url(url: str) -> bool:
+    """Block requests to private/internal network addresses."""
+    host = urlparse(url).hostname or ""
+    if host in _DENIED_HOSTS:
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_private or ip.is_loopback or ip.is_link_local
+    except ValueError:
+        return False
+
+
 def _fetch_url(url: str) -> str:
     """Download URL and return base64 data URI, or original on failure."""
+    if _is_denied_url(url):
+        logger.warning("Blocked private/internal URL: %s", url)
+        return url
     try:
         with urllib.request.urlopen(url, timeout=10) as resp:
-            data = resp.read()
-        mime = resp.headers.get_content_type() or _guess_mime(url)
+            data = resp.read(_MAX_IMAGE_BYTES + 1)
+            mime = resp.headers.get_content_type() or _guess_mime(url)
+        if len(data) > _MAX_IMAGE_BYTES:
+            logger.warning("Image too large (>10MB): %s", url)
+            return url
         b64 = base64.b64encode(data).decode("ascii")
         return f"data:{mime};base64,{b64}"
     except Exception:
@@ -210,6 +233,8 @@ def _fetch_url(url: str) -> str:
 def _read_local(src: str, source_dir: Path) -> str:
     """Read local file and return base64 data URI."""
     path = (source_dir / src).resolve()
+    if not path.is_relative_to(source_dir.resolve()):
+        return src
     if not path.is_file():
         return src
     data = path.read_bytes()
