@@ -336,6 +336,18 @@ def _try_generate_thumbnail(html_path, port: int) -> None:
     threading.Thread(target=_run, daemon=True).start()
 
 
+def _generate_missing_thumbnails(reports_dir: Path, port: int) -> None:
+    """썸네일 없는 보고서를 백그라운드에서 일괄 생성."""
+    if not reports_dir.exists():
+        return
+    missing = [
+        p for p in reports_dir.glob("*.html")
+        if not (p.parent / f"{p.stem}.thumb.png").exists()
+    ]
+    for html_path in missing:
+        _try_generate_thumbnail(html_path, port)
+
+
 @mcp.tool()
 def open_dashboard(output_dir: str = "") -> str:
     """저장된 보고서 목록을 대시보드로 엽니다.
@@ -349,6 +361,7 @@ def open_dashboard(output_dir: str = "") -> str:
     out_dir = _resolve_output_dir(output_dir)
     srv = open_dashboard_in_browser(out_dir)
     _active_servers.append(srv)
+    _generate_missing_thumbnails(out_dir, srv.port)
     return f"대시보드를 열었습니다: http://127.0.0.1:{srv.port}/dashboard"
 
 

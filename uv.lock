@@ -499,13 +499,9 @@ dependencies = [
     { name = "markdown" },
     { name = "mcp" },
     { name = "openpyxl" },
-    { name = "pyyaml" },
-]
-
-[package.optional-dependencies]
-pdf = [
     { name = "pillow" },
     { name = "playwright" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -519,11 +515,10 @@ requires-dist = [
     { name = "markdown", specifier = ">=3.5" },
     { name = "mcp", specifier = ">=1.0.0" },
     { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pillow", marker = "extra == 'pdf'", specifier = ">=10.0" },
-    { name = "playwright", marker = "extra == 'pdf'", specifier = ">=1.40" },
+    { name = "pillow", specifier = ">=10.0" },
+    { name = "playwright", specifier = ">=1.40" },
     { name = "pyyaml", specifier = ">=6.0" },
 ]
-provides-extras = ["pdf"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=9.0.3" }]
