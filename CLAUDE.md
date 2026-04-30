@@ -81,7 +81,7 @@ src/papyrus/
 - `classification` (대외비/내부용/외부용) 없으면 `_require_classification()`에서 ValueError
 - 로고는 `PAPYRUS_LOGO` 환경변수로만 — `_resolve_logo()`에 번들 fallback 없음
 - `tokens.css`, `base.css` 직접 수정 금지 — 브랜드 색상은 `_patch_brand_colors()`로만 패치
-- 마크다운 ## 섹션 = 한 페이지, ### 서브섹션 허용, #### 이상 렌더링 무시
+- 마크다운 ## = 섹션 구분, ### = 서브섹션 허용, #### 이상 렌더링 무시 (페이지 분할은 내용 높이 기준 자동)
 - 리스트 항목 구분자: `: ` 사용, ` — ` 금지 (CSS가 자동으로 '—' 추가)
 - 칼아웃: `> [!info|tip|warning|danger] 본문` — 4종, 한 줄 전용, 인라인 마크다운 지원
 - blockquote (`>`) = 작성자 인사이트 전용, 수치/사실 나열 금지
