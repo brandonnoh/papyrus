@@ -28,6 +28,7 @@ src/papyrus/
   _chart_renderer.py     # Chart.js canvas/script 생성 — renderer.py에서 분리
   _image_utils.py        # embed_images() — layout block 처리, base64 인라인 임베딩
   _footnote_utils.py     # render_sections_with_footnotes() — 전역 각주 번호 일관성
+  _writing_rules.py      # SYNTAX_REFERENCE — 파서 구문 레퍼런스 단일 소스
   catalog.py             # TemplateMeta — meta.yaml 디스커버리/로드
   validator.py           # StyleViolationError — 6종 CSS·구조 규칙 위반 감지
   preview.py             # PreviewServer — 스레드 HTTP 서버, 브라우저 자동 오픈
@@ -46,9 +47,9 @@ src/papyrus/
 | 도구 | 역할 |
 |------|------|
 | `list_templates()` | 템플릿 목록 반환 — 보고서 생성 첫 단계 |
-| `get_template_guide_tool(template_id)` | 템플릿별 섹션·변수·가이드 반환 |
+| `get_template_guide_tool(template_id)` | 템플릿별 섹션·변수·가이드 + 파서 구문 레퍼런스 반환 (프리훅) |
 | `get_section_pool_tool()` | 커스텀 문서용 전체 섹션 풀 |
-| `generate_report_tool(...)` | 마크다운 → HTML 저장 + 미리보기 서버 실행 |
+| `generate_report_tool(...)` | 마크다운 → 구문 검증 → HTML 저장 + 미리보기 서버 실행 |
 | `get_report_source(filename, output_dir)` | 저장된 .md 원본 반환 |
 | `get_config_status()` | PAPYRUS_* 환경변수 현재값 확인 |
 | `list_reports(output_dir)` | 저장된 보고서 목록 (파일명·크기) |
@@ -61,6 +62,7 @@ src/papyrus/
 ```
 마크다운 텍스트
   → fix_markdown()                  # ' — ' → ': ', 사실형 blockquote 제거
+  → lint_markdown()                 # 구문 오류 감지 → 에러 시 조기 반환
   → _apply_frontmatter_defaults()   # date/authors 기본값 주입
   → parse_markdown()
       → render_sections_with_footnotes()  # 전역 각주 번호 통합 렌더링
@@ -81,6 +83,7 @@ src/papyrus/
 - `tokens.css`, `base.css` 직접 수정 금지 — 브랜드 색상은 `_patch_brand_colors()`로만 패치
 - 마크다운 ## 섹션 = 한 페이지, ### 서브섹션 허용, #### 이상 렌더링 무시
 - 리스트 항목 구분자: `: ` 사용, ` — ` 금지 (CSS가 자동으로 '—' 추가)
+- 칼아웃: `> [!info|tip|warning|danger] 본문` — 4종, 한 줄 전용, 인라인 마크다운 지원
 - blockquote (`>`) = 작성자 인사이트 전용, 수치/사실 나열 금지
 - 이미지: `![캡션](경로)` 전체 너비, `<!-- img:left/right -->...<img>...텍스트...<!-- /img -->` 2컬럼 레이아웃
 - 이미지 경로는 output_dir 기준 상대경로 또는 절대경로, URL(https://) 지원

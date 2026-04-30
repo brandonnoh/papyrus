@@ -223,7 +223,7 @@ def extract_key_messages(content: str) -> list[str]:
 # 5. render_section_html
 # ---------------------------------------------------------------------------
 
-_CALLOUT_LINE_RE = re.compile(r"^> \[!(warning|danger)\] ?(.*)$", re.IGNORECASE | re.MULTILINE)
+_CALLOUT_LINE_RE = re.compile(r"^> \[!(info|tip|warning|danger)\] ?(.*)$", re.IGNORECASE | re.MULTILINE)
 
 
 def render_section_html(section: Section) -> str:
@@ -238,9 +238,15 @@ def _preprocess_callouts(content: str) -> str:
     def _sub(m: re.Match) -> str:
         ctype = m.group(1).lower()
         text = m.group(2)
-        return f'<div class="key-message key-message--{ctype}">{text}</div>'
+        inline = md.markdown(text).removeprefix("<p>").removesuffix("</p>")
+        return f'<div class="key-message key-message--{ctype}">{inline}</div>'
 
     return _CALLOUT_LINE_RE.sub(_sub, content)
+
+
+_STRAY_CALLOUT_RE = re.compile(
+    r"\[!(info|tip|warning|danger)\]\s*", re.IGNORECASE,
+)
 
 
 def _replace_blockquotes(html: str) -> str:
@@ -250,7 +256,8 @@ def _replace_blockquotes(html: str) -> str:
     html = html.replace("</p>\n</blockquote>", "</div>")
     html = html.replace("</p></blockquote>", "</div>")
     html = html.replace("<blockquote>", '<div class="key-message">')
-    return html.replace("</blockquote>", "</div>")
+    html = html.replace("</blockquote>", "</div>")
+    return _STRAY_CALLOUT_RE.sub("", html)
 
 
 # ---------------------------------------------------------------------------

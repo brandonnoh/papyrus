@@ -246,6 +246,26 @@ caption,
   font-weight: var(--weight-h1);
 }
 
+.key-message--info {
+  color: var(--color-key-message-info-text);
+  background: var(--color-key-message-info-bg);
+  border-left-color: var(--color-key-message-info-border);
+}
+
+.key-message--info::before {
+  content: '\2139\0020';  /* ℹ  */
+}
+
+.key-message--tip {
+  color: var(--color-key-message-tip-text);
+  background: var(--color-key-message-tip-bg);
+  border-left-color: var(--color-key-message-tip-border);
+}
+
+.key-message--tip::before {
+  content: '\2714\0020';  /* ✔  */
+}
+
 .key-message--warning {
   color: var(--color-key-message-warning-text);
   background: var(--color-key-message-warning-bg);

@@ -83,6 +83,12 @@
   --spacing-table-bottom: 3pt;
 
   /* ===== 콜아웃 변형 ===== */
+  --color-key-message-info-text: #1E40AF;
+  --color-key-message-info-bg: #EFF6FF;
+  --color-key-message-info-border: #3B82F6;
+  --color-key-message-tip-text: #166534;
+  --color-key-message-tip-bg: #F0FDF4;
+  --color-key-message-tip-border: #22C55E;
   --color-key-message-warning-text: #92400E;
   --color-key-message-warning-bg: #FFF7ED;
   --color-key-message-warning-border: #F97316;

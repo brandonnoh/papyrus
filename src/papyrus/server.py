@@ -10,10 +10,11 @@ from .catalog import (
     get_template,
     get_template_guide,
 )
-from .parser import fix_markdown, parse_frontmatter, parse_markdown
+from .parser import fix_markdown, lint_markdown, parse_frontmatter, parse_markdown
 from .preview import open_dashboard_in_browser, open_preview
 
 from .renderer import render_report, save_report
+from ._writing_rules import COMPONENT_GUIDES, build_writing_guide
 
 mcp = FastMCP("papyrus")
 
@@ -78,23 +79,10 @@ def list_templates() -> list[dict]:
 @mcp.tool()
 def get_template_guide_tool(template_id: str) -> dict:
     """선택된 템플릿의 작성 가이드를 반환합니다. list_templates → 사용자 등급 확인 → 템플릿 확정 이후에만 호출하세요.
-    섹션 구조, 필수 변수, 마크다운 작성 예시를 포함합니다."""
+    섹션 구조, 필수 변수, 마크다운 작성 예시, 파서 구문 레퍼런스를 포함합니다."""
     meta = get_template(TEMPLATES_DIR, template_id)
     guide = get_template_guide(meta)
-    footnote_section = (
-        "\n### 각주 (출처·보충 설명)\n"
-        "인라인 참조: `[^id]` 형태로 본문에 삽입합니다.\n"
-        "각주 정의: `[^id]: 내용` 을 해당 섹션 끝에 작성합니다.\n"
-        "출처 표기와 보충 설명 모두 가능합니다.\n"
-        "각주는 자동으로 문서 마지막 '참고문헌' 페이지에 모아 표시됩니다.\n\n"
-        "예시:\n"
-        "```\n"
-        "시장 규모는 연 12% 성장 중[^src1]이며, 국내는 8%[^src2] 수준입니다.\n\n"
-        "[^src1]: McKinsey Global Report, 2024\n"
-        "[^src2]: 한국IDC 연간 보고서, Q3 2024\n"
-        "```\n"
-    )
-    guide["guide_notes"] = guide.get("guide_notes", "") + footnote_section
+    guide["guide_notes"] = build_writing_guide(guide.get("guide_notes", ""))
     return guide
 
 
@@ -173,6 +161,9 @@ def generate_report_tool(
         file:// URI (Ctrl+클릭으로 브라우저에서 바로 열 수 있는 형태)
     """
     markdown_content, fix_log = fix_markdown(markdown_content)
+    lint_errors = lint_markdown(markdown_content)
+    if lint_errors:
+        return "[구문 오류]\n" + "\n".join(f"  • {e}" for e in lint_errors)
     markdown_content = _apply_frontmatter_defaults(markdown_content)
     report_data = parse_markdown(markdown_content)
     _require_classification(report_data.classification)
@@ -273,6 +264,9 @@ def list_reports(output_dir: str = "") -> list[dict]:
 def _render_markdown(markdown_content: str, source_dir: Path) -> tuple[str, str]:
     """fix/parse/validate/render pipeline. Returns (html, processed_md)."""
     md, _ = fix_markdown(markdown_content)
+    lint_errors = lint_markdown(md)
+    if lint_errors:
+        raise ValueError("[구문 오류] " + "; ".join(lint_errors))
     md = _apply_frontmatter_defaults(md)
     data = parse_markdown(md)
     _require_classification(data.classification)
@@ -411,7 +405,7 @@ AskUserQuestion(
       "header": "구성 요소",
       "multiSelect": true,
       "options": [
-        {{"label": "칼아웃", "description": "> [!warning] / > [!danger] — 경고·위험 강조 박스"}},
+        {{"label": "칼아웃", "description": "> [!info|tip|warning|danger] — 정보·권장·경고·위험 강조 박스"}},
         {{"label": "각주", "description": "[^id] — 출처·보충 설명, 마지막 페이지 참고문헌 자동 생성"}},
         {{"label": "표", "description": "파이프 테이블 — 데이터 비교·정리"}},
         {{"label": "이미지", "description": "![alt](path) — 시각 자료 삽입"}},
@@ -439,9 +433,7 @@ AskUserQuestion 응답을 받은 후:
 선택한 요소만 사용하세요. 선택하지 않은 요소는 마크다운에 포함하지 마세요.
 
 **칼아웃 선택 시:**
-- 경고(주황): `> [!warning] 주의가 필요한 내용`
-- 위험(빨강): `> [!danger] 즉각 조치가 필요한 내용`
-- 한 줄만 지원 — 여러 줄이면 칼아웃을 각각 따로 작성
+{COMPONENT_GUIDES["callout"]}
 
 **각주 선택 시:**
 - 인라인 참조: `시장 점유율 35%[^src1]`
