@@ -57,6 +57,34 @@ PREVIEW_CSS = """<style>
     cursor: pointer; font: inherit; padding: 0;
   }
   .preview-toolbar button:hover { opacity: 0.75; }
+  .preview-toolbar .toolbar-divider {
+    width: 1px; background: rgba(255,255,255,0.3);
+    align-self: stretch; margin: 0 2px;
+  }
+  .preview-toolbar .view-btn { opacity: 0.55; font-weight: 500; }
+  .preview-toolbar .view-btn.active { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+  .page--body.papyrus-cols-2,
+  .page--body.papyrus-cols-3 {
+    display: grid;
+    justify-content: center;
+    align-content: start;
+  }
+  .page--body.papyrus-cols-2 {
+    grid-template-columns: repeat(2, calc(var(--page-width) * 0.55));
+    grid-auto-rows: calc(var(--page-height) * 0.55);
+    column-gap: 16px; row-gap: 16px;
+  }
+  .page--body.papyrus-cols-2 .preview-page {
+    transform: scale(0.55); transform-origin: top left; margin: 0;
+  }
+  .page--body.papyrus-cols-3 {
+    grid-template-columns: repeat(3, calc(var(--page-width) * 0.4));
+    grid-auto-rows: calc(var(--page-height) * 0.4);
+    column-gap: 14px; row-gap: 14px;
+  }
+  .page--body.papyrus-cols-3 .preview-page {
+    transform: scale(0.4); transform-origin: top left; margin: 0;
+  }
   .print-hint {
     font-size: 10px; opacity: 0.6;
     border-left: 1px solid rgba(255,255,255,0.3);
@@ -84,6 +112,8 @@ PREVIEW_CSS = """<style>
 @media print {
   .preview-toolbar, .save-toast, [data-papyrus-clone] { display: none !important; }
   @page { margin: 0; }
+  .page--body.papyrus-cols-2, .page--body.papyrus-cols-3 { display: block !important; }
+  .page--body .preview-page { transform: none !important; }
   .page--body { min-height: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
   .page--body::after { display: none !important; }
   .page--cover { height: 100vh !important; }
@@ -134,7 +164,23 @@ PREVIEW_JS = """<script>
     + '<button onclick="window.__papyrusSave()">저장 (⌘S)</button>'
     + '<button id="papyrus-pdf-btn" onclick="window.__papyrusDownloadPdf()">PDF 저장</button>'
     + '<button onclick="window.print()">인쇄</button>'
+    + '<span class="toolbar-divider"></span>'
+    + '<button class="view-btn" data-cols="1" onclick="window.__papyrusSetCols(1)">1열</button>'
+    + '<button class="view-btn" data-cols="2" onclick="window.__papyrusSetCols(2)">2열</button>'
+    + '<button class="view-btn" data-cols="3" onclick="window.__papyrusSetCols(3)">3열</button>'
     + '<span class="print-hint">인쇄 여백: 없음</span>';
+
+  var COLS_KEY = 'papyrus-preview-cols';
+  window.__papyrusSetCols = function(n) {
+    var bodyEl = document.querySelector('.page--body');
+    if (!bodyEl) return;
+    bodyEl.classList.remove('papyrus-cols-2', 'papyrus-cols-3');
+    if (n === 2 || n === 3) bodyEl.classList.add('papyrus-cols-' + n);
+    Array.from(toolbar.querySelectorAll('.view-btn')).forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.dataset.cols, 10) === n);
+    });
+    try { localStorage.setItem(COLS_KEY, String(n)); } catch (e) {}
+  };
 
   var toast = document.createElement('div');
   toast.className = 'save-toast';
@@ -153,6 +199,9 @@ PREVIEW_JS = """<script>
         toolbar.classList.add('is-dirty');
       });
     }
+    var savedCols = 1;
+    try { savedCols = parseInt(localStorage.getItem(COLS_KEY) || '1', 10) || 1; } catch (e) {}
+    window.__papyrusSetCols(savedCols);
   });
 
   window.__papyrusDownloadPdf = function() {
@@ -193,7 +242,14 @@ PREVIEW_JS = """<script>
     document.querySelectorAll('[contenteditable]').forEach(function(el) {
       el.removeAttribute('contenteditable');
     });
+    var stashedCols = '';
+    if (bodyEl) {
+      ['papyrus-cols-2', 'papyrus-cols-3'].forEach(function(c) {
+        if (bodyEl.classList.contains(c)) { stashedCols = c; bodyEl.classList.remove(c); }
+      });
+    }
     var html = document.documentElement.outerHTML;
+    if (stashedCols && bodyEl) bodyEl.classList.add(stashedCols);
     document.querySelectorAll('.doc-section').forEach(function(sec) {
       sec.setAttribute('contenteditable', 'true');
     });
