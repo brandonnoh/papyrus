@@ -68,22 +68,20 @@ PREVIEW_CSS = """<style>
     display: grid;
     justify-content: center;
     align-content: start;
+    column-gap: 16px;
+    row-gap: 16px;
+    width: max-content;
+    margin: 0 auto;
   }
   .page--body.papyrus-cols-2 {
-    grid-template-columns: repeat(2, calc(var(--page-width) * 0.55));
-    grid-auto-rows: calc(var(--page-height) * 0.55);
-    column-gap: 16px; row-gap: 16px;
-  }
-  .page--body.papyrus-cols-2 .preview-page {
-    transform: scale(0.55); transform-origin: top left; margin: 0;
+    grid-template-columns: repeat(2, var(--page-width));
   }
   .page--body.papyrus-cols-3 {
-    grid-template-columns: repeat(3, calc(var(--page-width) * 0.4));
-    grid-auto-rows: calc(var(--page-height) * 0.4);
-    column-gap: 14px; row-gap: 14px;
+    grid-template-columns: repeat(3, var(--page-width));
   }
+  .page--body.papyrus-cols-2 .preview-page,
   .page--body.papyrus-cols-3 .preview-page {
-    transform: scale(0.4); transform-origin: top left; margin: 0;
+    margin: 0;
   }
   .print-hint {
     font-size: 10px; opacity: 0.6;
