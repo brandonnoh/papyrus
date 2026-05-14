@@ -26,20 +26,23 @@ src/papyrus/
   parser.py              # parse_markdown() → ReportData, fix_markdown() 자동 수정
   renderer.py            # render_report() → HTML, save_report() → 파일
   _chart_renderer.py     # Chart.js canvas/script 생성 — renderer.py에서 분리
+  _mermaid_renderer.py   # inject_mermaid_diagrams() — ```mermaid 코드블록 → SVG 변환
   _image_utils.py        # embed_images() — layout block 처리, base64 인라인 임베딩
   _footnote_utils.py     # render_sections_with_footnotes() — 전역 각주 번호 일관성
   _writing_rules.py      # SYNTAX_REFERENCE — 파서 구문 레퍼런스 단일 소스
   catalog.py             # TemplateMeta — meta.yaml 디스커버리/로드
   validator.py           # StyleViolationError — 6종 CSS·구조 규칙 위반 감지
   preview.py             # PreviewServer — 스레드 HTTP 서버, 브라우저 자동 오픈
-  _preview_css_js.py     # PREVIEW_CSS / PREVIEW_JS 상수 (preview.py 줄수 분리)
+  _preview_css_js.py     # PREVIEW_CSS / PREVIEW_JS 상수 (1/2/3열 뷰 토글 포함)
   _preview_dashboard.py  # build_html() — 대시보드 HTML 생성
   _preview_pdf.py        # render_pdf() — Playwright로 PDF 바이트 반환
   _thumbnail.py          # generate_thumbnail() — Playwright로 첫 페이지 PNG 캡처
   static/                # tokens.css (디자인 토큰), base.css (레이아웃), logo.png
-  templates/             # executive-summary/, meeting-minutes/, proposal/, status-report/, retrospective/, _base/
-    _base/          # base.html (공통 레이아웃), custom.html (커스텀 문서)
+  templates/             # 6종 템플릿 + _base/
+    _base/          # base.html (공통 레이아웃), custom.html (커스텀 문서 전용)
+    custom/         # meta.yaml + style.css (template.html은 _base/custom.html 사용)
     <id>/           # meta.yaml + template.html + style.css
+    # 표준 템플릿: executive-summary, meeting-minutes, proposal, status-report, retrospective
 ```
 
 ## MCP 도구 목록
@@ -49,7 +52,8 @@ src/papyrus/
 | `list_templates()` | 템플릿 목록 반환 — 보고서 생성 첫 단계 |
 | `get_template_guide_tool(template_id)` | 템플릿별 섹션·변수·가이드 + 파서 구문 레퍼런스 반환 (프리훅) |
 | `get_section_pool_tool()` | 커스텀 문서용 전체 섹션 풀 |
-| `generate_report_tool(...)` | 마크다운 → 구문 검증 → HTML 저장 + 미리보기 서버 실행 |
+| `generate_report_tool(...)` | 마크다운 → 구문 검증 → HTML 저장 + 미리보기 서버 실행 (파일명 충돌 시 suffix 부여) |
+| `update_report_tool(filename, markdown, output_dir)` | 기존 보고서를 새 마크다운으로 덮어써 재렌더링 (suffix 미부여) |
 | `get_report_source(filename, output_dir)` | 저장된 .md 원본 반환 |
 | `get_config_status()` | PAPYRUS_* 환경변수 현재값 확인 |
 | `list_reports(output_dir)` | 저장된 보고서 목록 (파일명·크기) |
@@ -109,6 +113,7 @@ src/papyrus/
 - `/` → 가장 최근 보고서, `/{filename}.html` → 특정 파일, `/dashboard` → 대시보드
 - `/export-pdf` → Playwright PDF 렌더링, `/thumbnail/{file}` → 썸네일 PNG
 - `/save` (POST) → contenteditable 편집 내용 파일에 저장
+- 1/2/3열 페이지 뷰 토글 — localStorage(`papyrus-preview-cols`)에 선호값 저장, 페이지는 원본 크기 그대로 grid 배치 (축소·잘림 없음)
 
 ## preview 모드 CSS 우선순위 규칙
 
