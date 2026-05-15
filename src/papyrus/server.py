@@ -365,19 +365,71 @@ def start_report() -> str:
     templates = discover_templates(TEMPLATES_DIR)
 
     template_opts = []
+    text_lines = []
     for t in templates:
         template_opts.append(
             f'    {{"label": "{t.name}", "description": "{t.description}"}}'
         )
+        text_lines.append(f"   - {t.name} — {t.description}")
     template_opts.append(
         '    {"label": "커스텀", "description": "자유 형식으로 직접 섹션 구성"}'
     )
     template_opts_str = ",\n".join(template_opts)
+    template_text_list = "\n".join(text_lines)
 
     return f"""사용자가 Papyrus 보고서 작성을 시작합니다.
 
-**첫 번째 행동으로 반드시 AskUserQuestion 도구를 아래 파라미터로 호출하세요.**
-설명하거나 안내 텍스트를 먼저 출력하지 마세요. 도구 호출이 첫 행동입니다.
+## 0단계: 브랜딩 설정 확인 (먼저 실행)
+
+**가장 먼저 `get_config_status()` 도구를 호출하세요.** 반환된 dict를 검사해 아래 두 분기 중 하나를 처리합니다.
+
+### 분기 A — 브랜딩을 한 번도 설정하지 않은 사용자
+조건: `PAPYRUS_LOGO`, `PAPYRUS_COLOR_PRIMARY`, `PAPYRUS_DEFAULT_AUTHOR`가 **모두 빈 문자열**.
+
+아래 메시지를 그대로 사용자에게 출력하고 **답을 받기 전엔 다음 단계로 넘어가지 마세요.**
+```
+Papyrus 브랜딩 설정이 아직 안 되어 있어요. 지금 5분만 투자해 로고·색상·기본 작성자를 등록하면
+이후 모든 보고서에 자동 적용됩니다.
+
+- 지금 설정: `/papyrus:setup` 을 입력해 위저드를 시작하세요.
+- 일단 기본값으로 진행: 그렇게 답해주시면 로고 없이, 기본 색상(#09356E)으로 만들어 드립니다.
+
+어떻게 할까요?
+```
+
+사용자가 "지금 설정"을 원하면 작업을 중단하고 `/papyrus:setup`을 안내하세요.
+"기본값으로 진행"을 원하면 분기 종료 후 1단계로 진행합니다.
+
+### 분기 B — 색상·작성자는 설정했는데 로고만 비어 있는 사용자
+조건: `PAPYRUS_LOGO`가 빈 문자열이지만 `PAPYRUS_COLOR_PRIMARY` 또는 `PAPYRUS_DEFAULT_AUTHOR` 중 하나라도 값이 있음.
+
+아래 메시지를 출력하고 답을 기다립니다.
+```
+워터마크로 쓸 로고(PAPYRUS_LOGO)가 아직 지정되지 않았어요. 로고 없이 진행해도 되지만,
+로고를 등록하면 모든 페이지 우상단에 워터마크가 자동으로 들어갑니다.
+
+- 지금 등록: `/papyrus:setup` 으로 로고 경로만 추가하세요.
+- 그냥 진행: 그렇게 답해주시면 로고 없이 만들어 드립니다.
+```
+
+사용자가 "지금 등록"을 원하면 중단하고 `/papyrus:setup`을 안내하세요.
+"그냥 진행"이면 1단계로 넘어갑니다.
+
+### 분기 C — 로고를 포함해 브랜딩이 설정된 경우
+조건: `PAPYRUS_LOGO`가 비어 있지 않음.
+
+아무 안내 없이 곧장 1단계로 진행합니다. (안내 메시지를 출력하지 마세요.)
+
+---
+
+## 1단계: 보고서 정보 질문
+
+**아래 세 가지 질문을 사용자에게 던지고 답을 기다리세요.**
+설명하거나 사족을 붙이지 마세요. 질문이 첫 행동입니다.
+
+## 우선: AskUserQuestion 도구가 사용 가능하면 그것으로 묻는다
+
+AskUserQuestion 도구가 현재 세션에서 호출 가능하다면, 아래 파라미터로 한 번에 호출하세요:
 
 ```
 AskUserQuestion(
@@ -417,7 +469,35 @@ AskUserQuestion(
 )
 ```
 
-AskUserQuestion 응답을 받은 후:
+## Fallback: AskUserQuestion이 없으면 텍스트 메시지로 묻는다
+
+AskUserQuestion 도구가 현재 세션의 도구 목록에 없거나 호출 불가하면,
+**아래 형식 그대로** 한 메시지에 담아 사용자에게 보내고 답변을 기다리세요. (도구 호출 없이 텍스트만)
+
+```
+보고서를 만들기 전 세 가지만 알려주세요.
+
+**1. 문서 등급** (택 1)
+   - 대외비 — 외부 공개 불가, 기밀 문서
+   - 내부용 — 사내 열람용, 팀·조직 공유
+   - 외부용 — 고객·파트너 공유 가능
+
+**2. 보고서 유형** (택 1)
+{{template_text_options}}
+
+**3. 사용할 구성 요소** (복수 선택 가능, 번호 나열)
+   1) 칼아웃 — 정보·권장·경고·위험 강조 박스
+   2) 각주 — 출처·보충 설명, 참고문헌 자동 생성
+   3) 표 — 파이프 테이블, 데이터 비교·정리
+   4) 이미지 — 시각 자료 삽입
+   5) 차트 — 표를 Chart.js 차트로 시각화
+   6) 다이어그램 — 플로우차트·시퀀스 다이어그램·마인드맵
+```
+
+위 `{{template_text_options}}` 자리에는 아래 줄을 그대로 채워 넣으세요:
+{template_text_list}
+
+사용자 답변을 받은 후:
 1. 등급 → frontmatter `classification:` 값으로 저장
 2. 템플릿 → `get_template_guide_tool(template_id)` 호출
 3. 선택된 구성 요소만 마크다운에 포함 (아래 "구성 요소별 작성 지침" 참조)
